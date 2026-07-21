@@ -66,14 +66,14 @@ input[type=range]{width:100%; accent-color:var(--accent)}
 <body>
 
 <div class="wrap">
-<h1>허수아비 체력바 — 시인성 개선 프리뷰</h1>
-<p class="sub"></p>
+<h1>허수아비 체력바 — 시인성 개선 프리뷰 (실측 합성)</h1>
+<p class="sub">배경 = 플레이모드 실캡처 풀프레임(인게임 카메라 1080×2160 동일 비율) · 바 = 실제 스프라이트(HPBar/HPBarFill) 실측 좌표 합성 · 아웃라인 검정 고정 · 잔상 흰색 고정 · 칸 = HP 100당 자동.</p>
 
 <div class="layout">
 <div class="stagecol" style="flex:1 1 auto; max-width:640px; margin:0 auto">
   <div class="viewtabs">
-    <button class="vtab on" data-view="full">풀프레임</button>
-    <button class="vtab" data-view="crop">확대</button>
+    <button class="vtab" data-view="full">풀프레임</button>
+    <button class="vtab on" data-view="crop">확대</button>
   </div>
   <div class="stage" id="stage">
     <div class="viewport" id="viewport">
@@ -91,7 +91,8 @@ input[type=range]{width:100%; accent-color:var(--accent)}
     <button class="act primary" id="upg">업그레이드 연출</button>
     <button class="act primary" id="reset">리셋</button>
   </div>
-  <p class="note"></p>
+  <p class="note">확정 고정값 — 배경 불투명 70%·틴트 20%·아웃라인 6(검정)·Y스케일 0.002·눈금 두께 12·잔상 흰색.<br>적용 매핑 — 배경: <code>Bar Image color</code>(틴트×불투명) · 아웃라인(검정): <code>Bar Outline 컴포넌트</code> · 잔상(흰색): <code>Back Image color</code> · 높이: <code>Bar 스케일 Y</code>(현재 0.002) · 칸: <code>HP_PER_SEGMENT=100</code> 자동.<br>
+  현 구조: <code>HPBar</code> 632×118(테두리 좌우5/상하6px=스크린 균일) 600×70 · <code>HPBarFill</code> 590×62 테두리 안쪽 · 눈금 두께: <code>TickWidth</code>, 인셋 8 고정 · 색전이 60%/30%.</p>
 </div>
 
 </div>
@@ -108,7 +109,7 @@ const VIEWS={
   full:{img:PLATE_FULL, cw:1080, bx0:458.2, by0:800.25, bx1:633.5, by1:827.5, stageW:'405px', aspect:'1 / 2'},
   crop:{img:PLATE_CROP, cw:1200, bx0:436.4, by0:520.5, bx1:787.0, by1:575.0, stageW:'600px', aspect:'1 / 1'},
 };
-let curView='full';
+let curView='crop';
 const BAR_W=600, BAR_H=70, TICK_W=22, TICK_INSET=8, FILL_INSET_X=10, FILL_INSET_Y=8;
 const HP_PER_SEGMENT=100, PAD=30;
 const OCOLOR='#06080a', GHOST_COLOR='#ffffff';
