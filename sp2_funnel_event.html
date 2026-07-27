@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ProjectB 퍼널 이벤트 설계서</title>
+<style>
+:root{--ink:#1b1f24;--sub:#61686f;--faint:#9aa1a8;--line:#e6e8eb;--bg:#f7f8f9;--card:#fff;--blue:#2456c4;--blue-bg:#eef3fc;--green:#1a7048;--green-bg:#e9f5ef;--gray:#878e96;--gray-bg:#f1f3f5;--amber:#8f5e08;--amber-bg:#fcf3e0;}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:'Pretendard',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;font-size:14px}
+.wrap{max-width:920px;margin:0 auto;padding:0 24px 90px}
+header{padding:52px 0 30px;border-bottom:1px solid var(--line);margin-bottom:34px}
+.doc-kind{font-size:12px;letter-spacing:.12em;color:var(--blue);font-weight:700;margin-bottom:10px}
+h1{font-size:26px;letter-spacing:-.01em;margin-bottom:10px}
+.purpose{color:var(--sub);max-width:640px}
+.meta{display:flex;gap:26px;margin-top:20px;flex-wrap:wrap}
+.meta div{font-size:12.5px;color:var(--sub)}
+.meta b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-top:1px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 38px}
+nav a{font-size:12.5px;color:var(--sub);text-decoration:none;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:5px 13px}
+nav a:hover{color:var(--blue);border-color:var(--blue)}
+section{margin-bottom:52px}
+h2{font-size:17px;margin-bottom:4px;letter-spacing:-.01em}
+h2 .no{color:var(--blue);margin-right:8px;font-variant-numeric:tabular-nums}
+h3{font-size:14px;margin:24px 0 8px}
+.desc{color:var(--sub);margin-bottom:14px;font-size:13px}
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:8px}
+.sm{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.sm .t{font-size:13px;font-weight:700}
+.sm .d{font-size:12.5px;color:var(--sub);margin-top:3px}
+.sm .n{font-size:12px;color:var(--blue);font-weight:600;margin-top:8px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13px}
+th{text-align:left;background:#f4f6f8;color:var(--sub);font-weight:600;padding:9px 13px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+.num{font-family:ui-monospace,Menlo,monospace;color:var(--sub);white-space:nowrap;font-size:12.5px}
+.b{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.b.ok{color:var(--green);background:var(--green-bg)}
+.b.ex{color:var(--gray);background:var(--gray-bg)}
+.tag{display:inline-block;padding:1px 8px;border-radius:6px;font-size:12px;color:var(--sub);background:var(--gray-bg);white-space:nowrap}
+.tag.star{color:var(--amber);background:var(--amber-bg);font-weight:600}
+.chip{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;color:#1d47a6;background:var(--blue-bg);margin:1px 2px 1px 0;white-space:nowrap;font-family:ui-monospace,Menlo,monospace}
+.exrow td{color:var(--faint)}
+.filters{display:flex;gap:6px;margin:0 0 10px}
+.fb{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:5px 13px;font-size:13px;cursor:pointer;color:var(--sub)}
+.fb.on{border-color:var(--blue);color:var(--blue);background:var(--blue-bg);font-weight:600}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--gray-bg);padding:1px 6px;border-radius:5px}
+.fn{font-size:12.5px;color:var(--sub);margin-top:10px;line-height:1.7}
+.callout{background:var(--amber-bg);border:1px solid #efdcae;border-radius:12px;padding:13px 17px;font-size:13px}
+.callout b{color:var(--amber)}
+footer{border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media print{.filters,nav{display:none} body{background:#fff} .exrow{display:table-row!important}}
+</style></head><body><div class="wrap">
+
+<header>
+<div class="doc-kind">ANALYTICS SPEC</div>
+<h1>스프린트 2 퍼널이벤트</h1>
+<div class="purpose">지표 테스트를 위한 퍼널 데이터 측정 이벤트 정의. 온보딩 진행, 유저 상태 스냅샷, 업그레이드 진행, SpecialCustomer 사이클의 4개 영역을 측정한다.</div>
+</header>
+
+<nav>
+<a href="#s0">개요</a>
+<a href="#s1">1. 온보딩 스텝 퍼널</a>
+<a href="#s2">2. 커스텀 데이터</a>
+<a href="#s3">3. 업그레이드 퍼널</a>
+<a href="#s4">4. SpecialCustomer</a>
+</nav>
+
+<section id="s0">
+<h2>개요</h2>
+<div class="summary">
+<div class="sm"><div class="t">온보딩 스텝 퍼널</div><div class="d">메인스텝 진행/이탈 측정</div><div class="n">115 스텝 중 81 사용</div></div>
+<div class="sm"><div class="t">커스텀 데이터 스냅샷</div><div class="d">주요 지점의 재화·성장 상태</div><div class="n">온보딩 6 + 광산 15곳</div></div>
+<div class="sm"><div class="t">업그레이드 진행 퍼널</div><div class="d">항목별 레벨 도달 마일스톤</div><div class="n">5개 시스템</div></div>
+<div class="sm"><div class="t">SpecialCustomer 퍼널</div><div class="d">생성 → 종료 사이클 측정</div><div class="n">4개 이벤트</div></div>
+</div>
+</section>
+
+<section id="s1">
+<h2><span class="no">1</span>온보딩 메인스텝 퍼널</h2>
+<div class="desc">유저 행동이 있는 스텝만 측정 대상으로 사용한다. 행동 없이 자동 진행되는 스텝(제외 34: 딜레이 14 · 컨텐츠 언락 11 · 대기 6 · 연출 1 · 패스스루 1 · 홀더 1)은 이벤트를 보내지 않는다.</div>
+<div class="filters">
+<button class="fb on" onclick="flt('all',this)">전체 115</button>
+<button class="fb" onclick="flt('ok',this)">사용 81</button>
+<button class="fb" onclick="flt('ex',this)">제외 34</button>
+</div>
+<table id="tb1">
+<thead><tr><th>step</th><th>내용</th><th>측정</th><th>비고</th></tr></thead>
+<tbody>
+<tr class="" data-f="ok"><td class="num">001</td><td>이동하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">002</td><td>건설 제작기구</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">003</td><td>건설 대기</td><td><span class="b ex">제외</span></td><td><span class="tag">대기</span></td></tr>
+<tr class="" data-f="ok"><td class="num">004</td><td>장비 검 제작 알림</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">005</td><td>광석 집기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">006</td><td>재료책상에 재료 내려놓기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">007</td><td>장비 제작 시작하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">008</td><td>장비 제작 하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">009</td><td>장비 집기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">010</td><td>건설 진열대</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">011</td><td>진열 해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">012</td><td>휴지통 생성</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">013</td><td>Contents Unlock - CustomerManager</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">014</td><td>Contents Unlock - CustomerOrder</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">015</td><td>손님 알려주기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">016</td><td>손님이 상품을 집기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">017</td><td>건설 계산대</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">018</td><td>계산 시작하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">019</td><td>계산 완료하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">020</td><td>수금하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">021</td><td>딜레이 & 손님 스폰 포인트 원복</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">022</td><td>진열대 포커스 & 광산 해금하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">023</td><td>광산 들어가보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">024</td><td>광맥 캐보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">025</td><td>광석 줏어보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">026</td><td>광차 해금</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">027</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">028</td><td>광차 생성 완료 기다리기</td><td><span class="b ex">제외</span></td><td><span class="tag">대기</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">029</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">030</td><td>광차에 광석 넣기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">031</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">032</td><td>광차 전송해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">033</td><td>광차 전송 완료 기다리기</td><td><span class="b ex">제외</span></td><td><span class="tag">대기</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">034</td><td>카메라 전환 대기</td><td><span class="b ex">제외</span></td><td><span class="tag">대기</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">035</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">036</td><td>광산 나가기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">037</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">038</td><td>Contents Unlock - ViewMineProgressBar</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">039</td><td>무기 제작하러가기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">040</td><td>무기 3개 제작하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">041</td><td>장비 집기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">042</td><td>진열 3개 해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">043</td><td>계산하러가기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">044</td><td>계산 2번하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">045</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">046</td><td>훈련장 만석 확인</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">047</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">048</td><td>Contents Unlock - ToDoGuide</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">049</td><td>할것 확인 버튼 인지하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">050</td><td>훈련장 해금하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">051</td><td>건설 허수아비</td><td><span class="b ok">사용</span></td><td><span class="tag star">데이터 스냅샷</span></td></tr>
+<tr class="" data-f="ok"><td class="num">052</td><td>허수아비 수리 필요</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">053</td><td>Contents Unlock - ViewTrainingCenter</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">054</td><td>훈련장 확인 버튼 인지하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">055</td><td>허수아비 수리 시작하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">056</td><td>허수아비 수리 완료하기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">057</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">058</td><td>훈련장 골드 발판 포커싱</td><td><span class="b ex">제외</span></td><td><span class="tag">연출</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">059</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">060</td><td>직원 고용 - 검 제작</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">061</td><td>Contents Unlock - ViewShop</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">062</td><td>직원 고용- 광석 1</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">063</td><td>Contents Unlock - ViewOreStand</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">064</td><td>Contents Unlock - DisplayStandUpgrade</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">065</td><td>진열대까지 이동</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">066</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">067</td><td>시설(진열대) 업그레이드 진입해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">068</td><td>시설(진열대) 업그레이드 해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">069</td><td>시설(진열대) 업그레이드 닫기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">070</td><td>허수아비 2</td><td><span class="b ok">사용</span></td><td><span class="tag star">데이터 스냅샷</span></td></tr>
+<tr class="" data-f="ok"><td class="num">071</td><td>직원 고용 - 진열 1</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">072</td><td>장비 업그레이드 가능 알림</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">073</td><td>Contents Unlock - WeaponUpgrade</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">074</td><td>장비 업그레이드 진입해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">075</td><td>장비 검 강화해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">076</td><td>장비 업그레이드 닫기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">077</td><td>직원 고용 - 수리 1</td><td><span class="b ok">사용</span></td><td><span class="tag star">데이터 스냅샷</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">078</td><td>Contents Unlock - WorkerUpgrade</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="" data-f="ok"><td class="num">079</td><td>직원 업그레이드 팝업 열기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">080</td><td>직원 업그레이드 해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">081</td><td>직원 업그레이드 팝업 닫기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">082</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">083</td><td>허수아비 3</td><td><span class="b ok">사용</span></td><td><span class="tag star">데이터 스냅샷</span></td></tr>
+<tr class="" data-f="ok"><td class="num">084</td><td>건설 - 진열대 검 2</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">085</td><td>허수아비 4</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">086</td><td>제작기구 - 도끼</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">087</td><td>건설 대기</td><td><span class="b ex">제외</span></td><td><span class="tag">대기</span></td></tr>
+<tr class="" data-f="ok"><td class="num">088</td><td>장비 도끼 제작 알림</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">089</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">090</td><td>허수아비 5(훈련장 확장)</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">091</td><td>건설 - 진열대 도끼 2</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">092</td><td>더미까지 이동</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">093</td><td>Contents Unlock - TrainingDummyUpgrade</td><td><span class="b ex">제외</span></td><td><span class="tag">컨텐츠 언락</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">094</td><td>딜레이</td><td><span class="b ex">제외</span></td><td><span class="tag">딜레이</span></td></tr>
+<tr class="" data-f="ok"><td class="num">095</td><td>시설(더미) 업그레이드 진입해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">096</td><td>시설(더미) 업그레이드 해보기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">097</td><td>시설(더미) 업그레이드 닫기</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">098</td><td>휴지통 온보딩 서브스텝 이동(패스스루)</td><td><span class="b ex">제외</span></td><td><span class="tag">패스스루</span></td></tr>
+<tr class="" data-f="ok"><td class="num">099</td><td>직원 고용 - 도끼 제작</td><td><span class="b ok">사용</span></td><td><span class="tag star">데이터 스냅샷</span></td></tr>
+<tr class="" data-f="ok"><td class="num">100</td><td>직원 고용 - 수리 2</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">101</td><td>직원 고용 - 광석 2</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">102</td><td>허수아비 6</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">103</td><td>진열대 설치 - 도끼 1</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">104</td><td>직원 고용 - 진열 2</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">105</td><td>건설 - 진열대 망치 2</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">106</td><td>제작기구 - 망치</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">107</td><td>건설 대기</td><td><span class="b ex">제외</span></td><td><span class="tag">대기</span></td></tr>
+<tr class="" data-f="ok"><td class="num">108</td><td>장비 망치 제작 알림</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">109</td><td>직원 고용 - 망치 제작</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">110</td><td>진열대 설치 - 망치 1</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">111</td><td>직원 고용 - 수리 3</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">112</td><td>허수아비 7</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">113</td><td>허수아비 8</td><td><span class="b ok">사용</span></td><td></td></tr>
+<tr class="" data-f="ok"><td class="num">114</td><td>직원 고용 - 광석 3</td><td><span class="b ok">사용</span></td><td><span class="tag star">데이터 스냅샷</span></td></tr>
+<tr class="exrow" data-f="ex"><td class="num">115</td><td>홀더</td><td><span class="b ex">제외</span></td><td><span class="tag">홀더</span></td></tr>
+</tbody></table>
+</section>
+
+<section id="s2">
+<h2><span class="no">2</span>커스텀 데이터</h2>
+<div class="desc">지정 지점에서 유저 상태를 스냅샷으로 함께 기록한다. 데이터 항목은 아래 7종으로 고정하고, 각 지점은 ID로 참조한다.</div>
+
+<h3>2-1. 데이터 정의</h3>
+<table>
+<thead><tr><th>그룹</th><th>ID</th><th>항목</th><th>기록 내용</th></tr></thead>
+<tbody>
+<tr><td rowspan="2">재화</td><td><span class="chip">currency_gold</span></td><td>보유골드</td><td>현재 보유 골드</td></tr>
+<tr><td><span class="chip">currency_special_ore</span></td><td>보유특수광물</td><td>현재 보유 특수광물</td></tr>
+<tr><td rowspan="5">업그레이드</td><td><span class="chip">upgrade_player</span></td><td>플레이어 업그레이드</td><td>항목별 레벨 (이동속도 · 채굴력 · 가방 · 손 · 채굴속도 · 획득범위)</td></tr>
+<tr><td><span class="chip">upgrade_display_stand</span></td><td>진열대 업그레이드</td><td>진열대 수용량 레벨</td></tr>
+<tr><td><span class="chip">upgrade_weapon</span></td><td>장비 업그레이드</td><td>무기별 강화 스텝 (검 · 도끼 · 망치)</td></tr>
+<tr><td><span class="chip">upgrade_worker</span></td><td>직원 업그레이드</td><td>타입별 레벨 (운반 · 진열 · 수리 · 제작 · 캐셔)</td></tr>
+<tr><td><span class="chip">upgrade_dummy</span></td><td>더미 업그레이드</td><td>허수아비 체력 레벨</td></tr>
+</tbody></table>
+
+<h3>2-2. 온보딩 메인스텝 스냅샷 (6곳)</h3>
+<table>
+<thead><tr><th>step</th><th>스텝</th><th>기록 데이터</th></tr></thead>
+<tbody>
+<tr><td class="num">051</td><td>건설 허수아비</td><td><span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span></td></tr>
+<tr><td class="num">070</td><td>허수아비 2</td><td><span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="보유특수광물">currency_special_ore</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span> <span class="chip" title="진열대 업그레이드">upgrade_display_stand</span></td></tr>
+<tr><td class="num">077</td><td>직원 고용 - 수리 1</td><td><span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="보유특수광물">currency_special_ore</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span> <span class="chip" title="진열대 업그레이드">upgrade_display_stand</span> <span class="chip" title="장비 업그레이드">upgrade_weapon</span></td></tr>
+<tr><td class="num">083</td><td>허수아비 3</td><td><span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="보유특수광물">currency_special_ore</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span> <span class="chip" title="진열대 업그레이드">upgrade_display_stand</span> <span class="chip" title="장비 업그레이드">upgrade_weapon</span> <span class="chip" title="직원 업그레이드">upgrade_worker</span></td></tr>
+<tr><td class="num">099</td><td>직원 고용 - 도끼 제작</td><td><span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="보유특수광물">currency_special_ore</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span> <span class="chip" title="진열대 업그레이드">upgrade_display_stand</span> <span class="chip" title="장비 업그레이드">upgrade_weapon</span> <span class="chip" title="직원 업그레이드">upgrade_worker</span> <span class="chip" title="더미 업그레이드">upgrade_dummy</span></td></tr>
+<tr><td class="num">114</td><td>직원 고용 - 광석 3</td><td><span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="보유특수광물">currency_special_ore</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span> <span class="chip" title="진열대 업그레이드">upgrade_display_stand</span> <span class="chip" title="장비 업그레이드">upgrade_weapon</span> <span class="chip" title="직원 업그레이드">upgrade_worker</span> <span class="chip" title="더미 업그레이드">upgrade_dummy</span></td></tr>
+</tbody></table>
+<div class="fn">
+· step 051의 <code>upgrade_player</code>는 비동기 서브스텝으로 진행 중인 유저가 섞이는 지점 — 레벨 분포 관측 목적<br>
+· step 114는 온보딩 종료 스냅샷 — 졸업 시점 유저 상태 확정용
+</div>
+
+<h3>2-3. 광산 해금 스냅샷 (15곳)</h3>
+<div class="desc">기록 데이터는 전 지점 동일 — <span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="보유특수광물">currency_special_ore</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span> <span class="chip" title="진열대 업그레이드">upgrade_display_stand</span> <span class="chip" title="장비 업그레이드">upgrade_weapon</span> <span class="chip" title="직원 업그레이드">upgrade_worker</span> <span class="chip" title="더미 업그레이드">upgrade_dummy</span></div>
+<table>
+<thead><tr><th>구분</th><th>해금 시점</th><th>비콘</th></tr></thead>
+<tbody>
+
+<tr><td rowspan="3">광산 해금</td><td>동광산 해금</td><td class="num">BronzeMine</td></tr>
+<tr><td>은광산 해금</td><td class="num">SilverMine</td></tr>
+<tr><td>금광산 해금</td><td class="num">GoldMine</td></tr>
+<tr><td rowspan="3">동광산 (1~2 Room)</td><td>1 Room 광차 해금</td><td class="num">BronzeMineLift</td></tr>
+<tr><td>2 Room 광차 해금</td><td class="num">BronzeMine2Lift</td></tr>
+<tr><td>2 Room 임시 출입구 해금</td><td class="num">BronzeMine2Exit</td></tr>
+<tr><td rowspan="9">은광산 (1~5 Room)</td><td>1 Room 광차 해금</td><td class="num">SilverMineLift</td></tr>
+<tr><td>2 Room 광차 해금</td><td class="num">SilverMine2Lift</td></tr>
+<tr><td>3 Room 광차 해금</td><td class="num">SilverMine3Lift</td></tr>
+<tr><td>4 Room 광차 해금</td><td class="num">SilverMine4Lift</td></tr>
+<tr><td>5 Room 광차 해금</td><td class="num">SilverMine5Lift</td></tr>
+<tr><td>2 Room 임시 출입구 해금</td><td class="num">SilverMine2Exit</td></tr>
+<tr><td>3 Room 임시 출입구 해금</td><td class="num">SilverMine3Exit</td></tr>
+<tr><td>4 Room 임시 출입구 해금</td><td class="num">SilverMine4Exit</td></tr>
+<tr><td>5 Room 임시 출입구 해금</td><td class="num">SilverMine5Exit</td></tr>
+
+</tbody></table>
+<div class="fn">· 1 Room은 정식 입구가 있어 임시 출입구 비콘이 없음 (출입구는 2 Room부터 존재)</div>
+</section>
+
+<section id="s3">
+<h2><span class="no">3</span>업그레이드 진행 퍼널</h2>
+<div class="desc">업그레이드 항목별 통계 확보용. 레벨 도달 시점마다 마일스톤을 기록한다 — 플레이어는 3레벨 단위, 나머지는 1레벨 단위.</div>
+<table>
+<thead><tr><th>퍼널</th><th>대상</th><th>기록 단위</th><th>이벤트 예</th></tr></thead>
+<tbody>
+<tr><td><code>PlayerUpgrade</code></td><td>항목별 6종 (이동속도 · 채굴력 · 가방 · 손 · 채굴속도 · 획득범위)</td><td><b>3레벨 단위</b> (Lv 3, 6, 9 …)</td><td class="num">MoveSpeed : level_003</td></tr>
+<tr><td><code>DisplayStandUpgrade</code></td><td>진열대 수용량</td><td>1레벨 단위</td><td class="num">Capacity : level_002</td></tr>
+<tr><td><code>WeaponUpgrade</code></td><td>무기별 3종 (검 · 도끼 · 망치)</td><td>1스텝 단위</td><td class="num">Sword : step_004</td></tr>
+<tr><td><code>WorkerUpgrade</code></td><td>타입별 5종 (운반 · 진열 · 수리 · 제작 · 캐셔)</td><td>1레벨 단위</td><td class="num">RepairerWorker : level_002</td></tr>
+<tr><td><code>TrainingDummyUpgrade</code></td><td>허수아비 체력</td><td>1레벨 단위</td><td class="num">Health : level_003</td></tr>
+</tbody></table>
+</section>
+
+<section id="s4">
+<h2><span class="no">4</span>SpecialCustomer 퍼널</h2>
+<div class="desc">생성 → 종료를 하나의 사이클로 보고, 종료를 3가지 유형으로 구분해 기록한다.</div>
+<table>
+<thead><tr><th>이벤트</th><th>시점</th><th>기록 데이터</th></tr></thead>
+<tbody>
+<tr><td><code>Spawn</code></td><td>특수손님 생성 시</td><td><span class="chip">생성 회차</span> <span class="chip">주문 무기 종류</span> <span class="chip">요구 수량</span></td></tr>
+<tr><td><code>Complete_Deal</code></td><td>Deal 버튼으로 조기 완료</td><td><span class="chip">회차</span> <span class="chip">납품 수량(=요구 수량)</span> <span class="chip">보상 골드</span></td></tr>
+<tr><td><code>Expire_Full</code></td><td>시간 만료 + 전량 납품 (자동 완료)</td><td><span class="chip">회차</span> <span class="chip">보상 골드(보너스 포함)</span></td></tr>
+<tr><td><code>Expire_Partial</code></td><td>시간 만료 + 부분 납품</td><td><span class="chip">회차</span> <span class="chip">납품 수량 / 요구 수량</span> <span class="chip">부분 보상 골드</span></td></tr>
+</tbody></table>
+
+<h3>읽는 지표</h3>
+<table>
+<thead><tr><th>지표</th><th>계산</th></tr></thead>
+<tbody>
+<tr><td>완료율</td><td>(Complete_Deal + Expire_Full) ÷ Spawn</td></tr>
+<tr><td>조기 완료 비율</td><td>Complete_Deal ÷ 완료 전체 — Deal 버튼 사용성 확인</td></tr>
+<tr><td>실패 시 평균 납품률</td><td>Expire_Partial의 납품/요구 평균 — 요구 수량·제한 시간 밸런스 확인</td></tr>
+</tbody></table>
+</section>
+
+
+
+
+
+<script>
+function flt(k,btn){
+document.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+document.querySelectorAll('#tb1 tbody tr').forEach(r=>{r.style.display=(k==='all'||r.dataset.f===k)?'':'none';});
+}
+</script>
+</div></body></html>
