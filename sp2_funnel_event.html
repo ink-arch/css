@@ -69,7 +69,7 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font
 <h2>개요</h2>
 <div class="summary">
 <div class="sm"><div class="t">온보딩 스텝 퍼널</div><div class="d">메인스텝 진행/이탈 측정</div><div class="n">115 스텝 중 81 사용</div></div>
-<div class="sm"><div class="t">커스텀 데이터 스냅샷</div><div class="d">주요 지점의 재화·성장 상태</div><div class="n">온보딩 6 + 광산 15곳</div></div>
+<div class="sm"><div class="t">커스텀 데이터 스냅샷</div><div class="d">주요 지점의 재화·성장 상태</div><div class="n">온보딩 6 + 광산 19곳</div></div>
 <div class="sm"><div class="t">업그레이드 진행 퍼널</div><div class="d">항목별 레벨 도달 마일스톤</div><div class="n">5개 시스템</div></div>
 <div class="sm"><div class="t">SpecialCustomer 퍼널</div><div class="d">생성 → 종료 사이클 측정</div><div class="n">4개 이벤트</div></div>
 </div>
@@ -237,7 +237,7 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font
 · step 114는 온보딩 종료 스냅샷 — 졸업 시점 유저 상태 확정용
 </div>
 
-<h3>2-3. 광산 해금 스냅샷 (15곳)</h3>
+<h3>2-3. 광산 해금 스냅샷 (19곳)</h3>
 <div class="desc">기록 데이터는 전 지점 동일 — <span class="chip" title="보유골드">currency_gold</span> <span class="chip" title="보유특수광물">currency_special_ore</span> <span class="chip" title="플레이어 업그레이드">upgrade_player</span> <span class="chip" title="진열대 업그레이드">upgrade_display_stand</span> <span class="chip" title="장비 업그레이드">upgrade_weapon</span> <span class="chip" title="직원 업그레이드">upgrade_worker</span> <span class="chip" title="더미 업그레이드">upgrade_dummy</span></div>
 <table>
 <thead><tr><th>구분</th><th>해금 시점</th><th>비콘</th></tr></thead>
@@ -246,10 +246,14 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font
 <tr><td rowspan="3">광산 해금</td><td>동광산 해금</td><td class="num">BronzeMine</td></tr>
 <tr><td>은광산 해금</td><td class="num">SilverMine</td></tr>
 <tr><td>금광산 해금</td><td class="num">GoldMine</td></tr>
-<tr><td rowspan="3">동광산 (1~2 Room)</td><td>1 Room 광차 해금</td><td class="num">BronzeMineLift</td></tr>
+<tr><td rowspan="3">동광산 (1~2 Room)</td><td>2 Room 해금</td><td class="num">BronzeMine2</td></tr>
 <tr><td>2 Room 광차 해금</td><td class="num">BronzeMine2Lift</td></tr>
 <tr><td>2 Room 임시 출입구 해금</td><td class="num">BronzeMine2Exit</td></tr>
-<tr><td rowspan="9">은광산 (1~5 Room)</td><td>1 Room 광차 해금</td><td class="num">SilverMineLift</td></tr>
+<tr><td rowspan="13">은광산 (1~5 Room)</td><td>2 Room 해금</td><td class="num">SilverMine2</td></tr>
+<tr><td>3 Room 해금</td><td class="num">SilverMine3</td></tr>
+<tr><td>4 Room 해금</td><td class="num">SilverMine4</td></tr>
+<tr><td>5 Room 해금</td><td class="num">SilverMine5</td></tr>
+<tr><td>1 Room 광차 해금</td><td class="num">SilverMineLift</td></tr>
 <tr><td>2 Room 광차 해금</td><td class="num">SilverMine2Lift</td></tr>
 <tr><td>3 Room 광차 해금</td><td class="num">SilverMine3Lift</td></tr>
 <tr><td>4 Room 광차 해금</td><td class="num">SilverMine4Lift</td></tr>
@@ -260,7 +264,7 @@ footer{border-top:1px solid var(--line);padding-top:18px;color:var(--faint);font
 <tr><td>5 Room 임시 출입구 해금</td><td class="num">SilverMine5Exit</td></tr>
 
 </tbody></table>
-<div class="fn">· 1 Room은 정식 입구가 있어 임시 출입구 비콘이 없음 (출입구는 2 Room부터 존재)</div>
+<div class="fn">· 1 Room은 광산 해금 시 함께 열리므로 별도 방 해금 비콘이 없음 (방 해금은 2 Room부터)<br>· 1 Room은 정식 입구가 있어 임시 출입구 비콘이 없음 (출입구는 2 Room부터 존재)</div>
 </section>
 
 <section id="s3">
