@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>온보딩 메인스텝 퍼널 분석</title>
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,.10);
+  --blue:#2a78d6; --blue-soft:#86b6ef; --orange:#eb6834;
+  --critical:#d03b3b; --serious:#ec835a; --warning:#fab219; --good:#0ca30c;
+  --tooltip-bg:#0b0b0b; --tooltip-ink:#fcfcfb;
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
+  --blue:#3987e5; --blue-soft:#1c5cab; --orange:#d95926;
+  --tooltip-bg:#fcfcfb; --tooltip-ink:#0b0b0b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,.10);
+    --blue:#3987e5; --blue-soft:#1c5cab; --orange:#d95926;
+    --tooltip-bg:#fcfcfb; --tooltip-ink:#0b0b0b;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 24px 72px}
+@media (min-width:1400px){.wrap{max-width:1240px}}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px}
+h1{font-size:22px;font-weight:700;margin:0}
+.meta{color:var(--muted);font-size:12.5px}
+.theme-btn{border:1px solid var(--border);background:var(--surface);color:var(--ink-2);
+  border-radius:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;flex-shrink:0}
+.theme-btn:hover{color:var(--ink)}
+h2{font-size:16px;font-weight:700;margin:40px 0 14px}
+h1 .help{width:17px;height:17px;font-size:11.5px;top:-2px}
+.help{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:7px;
+  border:1px solid var(--border);border-radius:50%;color:var(--muted);font-size:10.5px;font-weight:600;
+  cursor:help;vertical-align:middle;position:relative;top:-1px}
+.help:hover{color:var(--ink);border-color:var(--baseline)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:20px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.tile .label{font-size:12.5px;color:var(--ink-2)}
+.tile .value{font-size:30px;font-weight:600;margin-top:2px}
+.tile .note{font-size:12px;color:var(--muted);margin-top:2px}
+.tile .value .unit{font-size:15px;font-weight:500;color:var(--ink-2);margin-left:2px}
+/* chart */
+.chart-scroll{overflow-x:auto;padding-bottom:4px}
+.chart-inner{width:100%}
+.panel-title{font-size:12.5px;color:var(--ink-2);margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.key{display:inline-block;width:10px;height:10px;border-radius:3px}
+svg text{font-family:inherit}
+.axis-t{fill:var(--muted);font-size:10.5px;font-variant-numeric:tabular-nums}
+.dlabel{fill:var(--ink-2);font-size:10.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.cp-t{fill:var(--muted);font-size:10px}
+.tooltip{position:fixed;z-index:10;pointer-events:none;background:var(--tooltip-bg);color:var(--tooltip-ink);
+  border-radius:8px;padding:9px 12px;font-size:12.5px;line-height:1.5;max-width:300px;
+  box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;transition:opacity .08s}
+.tooltip b{font-weight:700}
+.tooltip .tt-muted{opacity:.65}
+/* segment bars */
+.segs{display:flex;flex-direction:column;gap:10px}
+.seg{display:grid;grid-template-columns:150px 1fr 170px;align-items:center;gap:12px}
+.seg .name{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.seg .track{height:16px;background:transparent;position:relative;border-radius:4px}
+.seg .track::before{content:"";position:absolute;inset:0;border-radius:4px;background:var(--grid);opacity:.5}
+.seg .fill{position:absolute;top:0;bottom:0;left:0;border-radius:4px;background:var(--orange);min-width:2px}
+.seg .val{font-size:12.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;text-align:right}
+.seg .val b{color:var(--ink);font-weight:600}
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:var(--muted);font-weight:500;font-size:12px;text-align:left;padding:7px 10px;border-bottom:1px solid var(--grid);white-space:nowrap}
+td{padding:7px 10px;border-bottom:1px solid var(--grid);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.stepcode{font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--dot,var(--muted))}
+.b-crit{--dot:var(--critical);color:var(--ink);font-weight:600}
+.b-ser{--dot:var(--serious)}
+.b-warn{--dot:var(--warning)}
+.b-zero{--dot:var(--grid);color:var(--muted)}
+.ratebar{display:inline-block;height:8px;border-radius:4px 4px 4px 4px;background:var(--orange);vertical-align:middle;min-width:2px}
+.rowbar{display:inline-block;height:8px;border-radius:0 4px 4px 0;background:var(--blue);vertical-align:middle;min-width:2px}
+.rowval{font-size:11.5px;color:var(--muted);margin-left:6px;font-variant-numeric:tabular-nums;vertical-align:middle}
+tr.hl td{background:color-mix(in srgb, var(--critical) 7%, transparent)}
+/* callout */
+.callout{border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:8px;
+  background:var(--surface);padding:12px 16px;font-size:13px;color:var(--ink-2);margin-top:14px}
+.callout b{color:var(--ink)}
+.callout.warn{border-left-color:var(--warning)}
+/* details */
+details{margin-top:8px}
+details summary{cursor:pointer;font-size:13px;color:var(--ink-2);padding:10px 0;user-select:none;list-style:none;display:flex;align-items:center;gap:8px}
+details summary::before{content:"▸";font-size:11px;color:var(--muted);transition:transform .15s}
+details[open] summary::before{transform:rotate(90deg)}
+details summary:hover{color:var(--ink)}
+details.excl{margin-top:40px}
+details.excl>summary{font-size:16px;font-weight:700;color:var(--ink);padding:0 0 12px}
+details.excl>summary::before{font-size:12px}
+.tbl-scroll{overflow-x:auto}
+.pill{display:inline-block;font-size:11.5px;border:1px solid var(--border);border-radius:999px;padding:1px 9px;color:var(--ink-2);white-space:nowrap}
+.foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--grid);color:var(--muted);font-size:12px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>온보딩 메인스텝 퍼널 분석<span class="help" data-tip="기준일 2026-07-27 ~ 2026-07-30 · GA 퍼널 데이터 · 시작 유저 90명 · 사용 스텝 81종 (전체 115종 중, 설계 기준)">?</span></h1>
+  </div>
+  <button class="theme-btn" id="themeBtn">🌓 테마</button>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<h2>스텝별 퍼널<span class="help" data-tip="위: 각 스텝 완료 시점의 잔존 유저 수 · 아래: 스텝별 이탈율(직전 스텝 완료자 대비). 막대에 마우스를 올리면 스텝 설명과 상세 수치가 표시됩니다. ◆ 표시는 체크포인트 스텝입니다.">?</span></h2>
+<div class="card">
+  <p class="panel-title"><span class="key" style="background:var(--blue)"></span>잔존 유저 수 (명)</p>
+  <div class="chart-scroll"><div class="chart-inner" id="mainChart"></div></div>
+  <p class="panel-title" style="margin-top:14px"><span class="key" style="background:var(--orange)"></span>스텝 이탈율 (%)</p>
+  <div class="chart-scroll"><div class="chart-inner" id="churnChart"></div></div>
+</div>
+<div class="callout" id="chartInsight"></div>
+
+<h2>이탈율이 높은 스텝 TOP 10<span class="help" data-tip="이탈 인원 기준 상위 10개 스텝. 이탈율은 해당 스텝 진입자(직전 스텝 완료자) 대비 비율입니다.">?</span></h2>
+<div class="card tbl-scroll"><table id="topTable"></table></div>
+<div class="callout warn" id="topInsight"></div>
+
+<h2>전체 스텝 상세 (설명 + 그래프)<span class="help" data-tip="사용 스텝 81종의 설명과 수치를 한눈에 볼 수 있는 표입니다. 파란 막대는 잔존 유저 수(시작 90명 대비), 주황 막대는 해당 스텝 이탈율입니다. ◆는 체크포인트 스텝입니다.">?</span></h2>
+<div class="card">
+  <div class="tbl-scroll"><table id="fullTable"></table></div>
+</div>
+
+<details class="excl">
+  <summary>퍼널 분석에 포함되지 않는 스텝 (19종)<span class="help" data-tip="GA 퍼널 정의에는 포함되어 있으나 이벤트가 발화하지 않아(설계상 제외 스텝) 분석에서 제외한 19종입니다. 제외 사유는 퍼널 이벤트 설계안 기준입니다.">?</span></summary>
+<div class="card tbl-scroll"><table id="exclTable"></table></div>
+<div class="callout warn"><b>데이터 정리 필요:</b> main_step_029(딜레이)는 완료 0명임에도 이탈 11명으로 집계되었습니다. GA 퍼널 정의에서 미발화 스텝이 114 뒤에 배치되어, 온보딩을 완주한 11명이 이 스텝에서 이탈한 것으로 잘못 흡수된 데이터 아티팩트입니다. 나머지 18종은 완료·이탈 모두 0으로 퍼널 수치에 영향이 없습니다. 미발화 19종을 GA 퍼널 정의에서 제거하는 것을 권장합니다.</div>
+</details>
+
+<div class="foot">
+  <b>산출 기준</b> · 스텝 이탈율 = (직전 스텝 완료자 − 해당 스텝 완료자) ÷ 직전 스텝 완료자. GA 내보내기에서 동일 완료 수 스텝의 정렬이 스텝 번호 순서와 어긋난 구간(042/043, 046~052)은 스텝 번호 순으로 재정렬 후 재계산했으며, 총 이탈 합계(79명)는 원본과 일치함을 확인했습니다.<br>
+  <b>해석 주의</b> · GA 퍼널의 "이탈"에는 아직 온보딩을 진행 중인 유저(최근 설치)가 포함될 수 있어, 특히 후반부 스텝의 이탈율은 실제 이탈보다 과대 추정될 수 있습니다.<br>
+  스텝 설명 출처: 스프린트 2 퍼널이벤트 설계안 (온보딩 메인스텝 사용/제외 목록)
+</div>
+</div>
+
+<div class="tooltip" id="tt"></div>
+
+<script>
+const DATA = {"start": 90, "final": 11, "steps": [{"i": 1, "num": "001", "desc": "이동하기", "enter": 90, "comp": 90, "churn": 0, "rate": 0.0}, {"i": 2, "num": "002", "desc": "건설 제작기구", "enter": 90, "comp": 89, "churn": 1, "rate": 1.1}, {"i": 3, "num": "004", "desc": "장비 검 제작 알림", "enter": 89, "comp": 88, "churn": 1, "rate": 1.1}, {"i": 4, "num": "005", "desc": "광석 집기", "enter": 88, "comp": 88, "churn": 0, "rate": 0.0}, {"i": 5, "num": "006", "desc": "재료책상에 재료 내려놓기", "enter": 88, "comp": 88, "churn": 0, "rate": 0.0}, {"i": 6, "num": "007", "desc": "장비 제작 시작하기", "enter": 88, "comp": 86, "churn": 2, "rate": 2.3}, {"i": 7, "num": "008", "desc": "장비 제작 하기", "enter": 86, "comp": 86, "churn": 0, "rate": 0.0}, {"i": 8, "num": "009", "desc": "장비 집기", "enter": 86, "comp": 86, "churn": 0, "rate": 0.0}, {"i": 9, "num": "010", "desc": "건설 진열대", "enter": 86, "comp": 86, "churn": 0, "rate": 0.0}, {"i": 10, "num": "011", "desc": "진열 해보기", "enter": 86, "comp": 84, "churn": 2, "rate": 2.3}, {"i": 11, "num": "012", "desc": "휴지통 생성", "enter": 84, "comp": 84, "churn": 0, "rate": 0.0}, {"i": 12, "num": "015", "desc": "손님 알려주기", "enter": 84, "comp": 84, "churn": 0, "rate": 0.0}, {"i": 13, "num": "016", "desc": "손님이 상품을 집기", "enter": 84, "comp": 84, "churn": 0, "rate": 0.0}, {"i": 14, "num": "017", "desc": "건설 계산대", "enter": 84, "comp": 83, "churn": 1, "rate": 1.2}, {"i": 15, "num": "018", "desc": "계산 시작하기", "enter": 83, "comp": 83, "churn": 0, "rate": 0.0}, {"i": 16, "num": "019", "desc": "계산 완료하기", "enter": 83, "comp": 83, "churn": 0, "rate": 0.0}, {"i": 17, "num": "020", "desc": "수금하기", "enter": 83, "comp": 82, "churn": 1, "rate": 1.2}, {"i": 18, "num": "022", "desc": "진열대 포커스 & 광산 해금하기", "enter": 82, "comp": 81, "churn": 1, "rate": 1.2}, {"i": 19, "num": "023", "desc": "광산 들어가보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 20, "num": "024", "desc": "광맥 캐보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 21, "num": "025", "desc": "광석 줏어보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 22, "num": "026", "desc": "광차 해금", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 23, "num": "030", "desc": "광차에 광석 넣기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 24, "num": "032", "desc": "광차 전송해보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 25, "num": "036", "desc": "광산 나가기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 26, "num": "039", "desc": "무기 제작하러가기", "enter": 81, "comp": 80, "churn": 1, "rate": 1.2}, {"i": 27, "num": "040", "desc": "무기 3개 제작하기", "enter": 80, "comp": 78, "churn": 2, "rate": 2.5}, {"i": 28, "num": "041", "desc": "장비 집기", "enter": 78, "comp": 77, "churn": 1, "rate": 1.3}, {"i": 29, "num": "042", "desc": "진열 3개 해보기", "enter": 77, "comp": 77, "churn": 0, "rate": 0.0}, {"i": 30, "num": "043", "desc": "계산하러가기", "enter": 77, "comp": 77, "churn": 0, "rate": 0.0}, {"i": 31, "num": "044", "desc": "계산 2번하기", "enter": 77, "comp": 76, "churn": 1, "rate": 1.3}, {"i": 32, "num": "046", "desc": "훈련장 만석 확인", "enter": 76, "comp": 75, "churn": 1, "rate": 1.3}, {"i": 33, "num": "049", "desc": "할것 확인 버튼 인지하기", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 34, "num": "050", "desc": "훈련장 해금하기", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 35, "num": "051", "desc": "건설 허수아비", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 36, "num": "052", "desc": "허수아비 수리 필요", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 37, "num": "054", "desc": "훈련장 확인 버튼 인지하기", "enter": 75, "comp": 74, "churn": 1, "rate": 1.3}, {"i": 38, "num": "055", "desc": "허수아비 수리 시작하기", "enter": 74, "comp": 73, "churn": 1, "rate": 1.4}, {"i": 39, "num": "056", "desc": "허수아비 수리 완료하기", "enter": 73, "comp": 72, "churn": 1, "rate": 1.4}, {"i": 40, "num": "060", "desc": "직원 고용 - 검 제작", "enter": 72, "comp": 71, "churn": 1, "rate": 1.4}, {"i": 41, "num": "062", "desc": "직원 고용 - 광석 1", "enter": 71, "comp": 69, "churn": 2, "rate": 2.8}, {"i": 42, "num": "065", "desc": "진열대까지 이동", "enter": 69, "comp": 69, "churn": 0, "rate": 0.0}, {"i": 43, "num": "067", "desc": "시설(진열대) 업그레이드 진입해보기", "enter": 69, "comp": 69, "churn": 0, "rate": 0.0}, {"i": 44, "num": "068", "desc": "시설(진열대) 업그레이드 해보기", "enter": 69, "comp": 68, "churn": 1, "rate": 1.4}, {"i": 45, "num": "069", "desc": "시설(진열대) 업그레이드 닫기", "enter": 68, "comp": 67, "churn": 1, "rate": 1.5}, {"i": 46, "num": "070", "desc": "허수아비 2", "enter": 67, "comp": 67, "churn": 0, "rate": 0.0}, {"i": 47, "num": "071", "desc": "직원 고용 - 진열 1", "enter": 67, "comp": 61, "churn": 6, "rate": 9.0}, {"i": 48, "num": "072", "desc": "장비 업그레이드 가능 알림", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 49, "num": "074", "desc": "장비 업그레이드 진입해보기", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 50, "num": "075", "desc": "장비 검 강화해보기", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 51, "num": "076", "desc": "장비 업그레이드 닫기", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 52, "num": "077", "desc": "직원 고용 - 수리 1", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 53, "num": "079", "desc": "직원 업그레이드 팝업 열기", "enter": 61, "comp": 60, "churn": 1, "rate": 1.6}, {"i": 54, "num": "080", "desc": "직원 업그레이드 해보기", "enter": 60, "comp": 60, "churn": 0, "rate": 0.0}, {"i": 55, "num": "081", "desc": "직원 업그레이드 팝업 닫기", "enter": 60, "comp": 60, "churn": 0, "rate": 0.0}, {"i": 56, "num": "083", "desc": "허수아비 3", "enter": 60, "comp": 60, "churn": 0, "rate": 0.0}, {"i": 57, "num": "084", "desc": "건설 - 진열대 검 2", "enter": 60, "comp": 58, "churn": 2, "rate": 3.3}, {"i": 58, "num": "085", "desc": "허수아비 4", "enter": 58, "comp": 58, "churn": 0, "rate": 0.0}, {"i": 59, "num": "086", "desc": "제작기구 - 도끼", "enter": 58, "comp": 54, "churn": 4, "rate": 6.9}, {"i": 60, "num": "088", "desc": "장비 도끼 제작 알림", "enter": 54, "comp": 51, "churn": 3, "rate": 5.6}, {"i": 61, "num": "090", "desc": "허수아비 5(훈련장 확장)", "enter": 51, "comp": 51, "churn": 0, "rate": 0.0}, {"i": 62, "num": "091", "desc": "건설 - 진열대 도끼 2", "enter": 51, "comp": 48, "churn": 3, "rate": 5.9}, {"i": 63, "num": "092", "desc": "더미까지 이동", "enter": 48, "comp": 48, "churn": 0, "rate": 0.0}, {"i": 64, "num": "095", "desc": "시설(더미) 업그레이드 진입해보기", "enter": 48, "comp": 46, "churn": 2, "rate": 4.2}, {"i": 65, "num": "096", "desc": "시설(더미) 업그레이드 해보기", "enter": 46, "comp": 46, "churn": 0, "rate": 0.0}, {"i": 66, "num": "097", "desc": "시설(더미) 업그레이드 닫기", "enter": 46, "comp": 46, "churn": 0, "rate": 0.0}, {"i": 67, "num": "099", "desc": "직원 고용 - 도끼 제작", "enter": 46, "comp": 46, "churn": 0, "rate": 0.0}, {"i": 68, "num": "100", "desc": "직원 고용 - 수리 2", "enter": 46, "comp": 42, "churn": 4, "rate": 8.7}, {"i": 69, "num": "101", "desc": "직원 고용 - 광석 2", "enter": 42, "comp": 38, "churn": 4, "rate": 9.5}, {"i": 70, "num": "102", "desc": "허수아비 6", "enter": 38, "comp": 33, "churn": 5, "rate": 13.2}, {"i": 71, "num": "103", "desc": "진열대 설치 - 도끼 1", "enter": 33, "comp": 31, "churn": 2, "rate": 6.1}, {"i": 72, "num": "104", "desc": "직원 고용 - 진열 2", "enter": 31, "comp": 30, "churn": 1, "rate": 3.2}, {"i": 73, "num": "105", "desc": "건설 - 진열대 망치 2", "enter": 30, "comp": 28, "churn": 2, "rate": 6.7}, {"i": 74, "num": "106", "desc": "제작기구 - 망치", "enter": 28, "comp": 18, "churn": 10, "rate": 35.7}, {"i": 75, "num": "108", "desc": "장비 망치 제작 알림", "enter": 18, "comp": 16, "churn": 2, "rate": 11.1}, {"i": 76, "num": "109", "desc": "직원 고용 - 망치 제작", "enter": 16, "comp": 16, "churn": 0, "rate": 0.0}, {"i": 77, "num": "110", "desc": "진열대 설치 - 망치 1", "enter": 16, "comp": 15, "churn": 1, "rate": 6.2}, {"i": 78, "num": "111", "desc": "직원 고용 - 수리 3", "enter": 15, "comp": 15, "churn": 0, "rate": 0.0}, {"i": 79, "num": "112", "desc": "허수아비 7", "enter": 15, "comp": 14, "churn": 1, "rate": 6.7}, {"i": 80, "num": "113", "desc": "허수아비 8", "enter": 14, "comp": 13, "churn": 1, "rate": 7.1}, {"i": 81, "num": "114", "desc": "직원 고용 - 광석 3", "enter": 13, "comp": 11, "churn": 2, "rate": 15.4}], "segments": [{"from": "시작", "to": "051", "enter": 90, "exit": 75, "churn": 15, "rate": 16.7}, {"from": "051", "to": "070", "enter": 75, "exit": 67, "churn": 8, "rate": 10.7}, {"from": "070", "to": "077", "enter": 67, "exit": 61, "churn": 6, "rate": 9.0}, {"from": "077", "to": "083", "enter": 61, "exit": 60, "churn": 1, "rate": 1.6}, {"from": "083", "to": "099", "enter": 60, "exit": 46, "churn": 14, "rate": 23.3}, {"from": "099", "to": "114", "enter": 46, "exit": 11, "churn": 35, "rate": 76.1}], "excluded": [{"num": "003", "desc": "건설 대기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "013", "desc": "Contents Unlock - CustomerManager", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "014", "desc": "Contents Unlock - CustomerOrder", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "021", "desc": "딜레이 & 손님 스폰 포인트 원복", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "027", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "028", "desc": "광차 생성 완료 기다리기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "029", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 11}, {"num": "031", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "033", "desc": "광차 전송 완료 기다리기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "034", "desc": "카메라 전환 대기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "035", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "037", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "038", "desc": "Contents Unlock - ViewMineProgressBar", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "045", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "053", "desc": "Contents Unlock - ViewTrainingCenter", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "057", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "058", "desc": "훈련장 골드 발판 포커싱", "reason": "연출", "comp": 0, "churn": 0}, {"num": "059", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "064", "desc": "Contents Unlock - DisplayStandUpgrade", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}], "checkpoints": ["051", "070", "077", "083", "099", "114"]};
+
+// ---------- theme ----------
+const themeBtn=document.getElementById('themeBtn');
+themeBtn.onclick=()=>{
+  const r=document.documentElement;
+  const cur=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  r.setAttribute('data-theme',cur==='dark'?'light':'dark');
+};
+
+// ---------- helpers ----------
+const S=DATA.steps, START=DATA.start, FINAL=DATA.final;
+const cpSet=new Set(DATA.checkpoints);
+const pct=v=>v.toFixed(1).replace(/\.0$/,'')+'%';
+function sevClass(r){ if(r>=20) return 'b-crit'; if(r>=8) return 'b-ser'; if(r>0) return 'b-warn'; return 'b-zero'; }
+function sevLabel(r){ if(r>=20) return '심각'; if(r>=8) return '높음'; if(r>0) return '주의'; return '—'; }
+
+// ---------- KPI ----------
+document.getElementById('kpis').innerHTML=`
+  <div class="tile"><div class="label">시작 유저</div><div class="value">${START}<span class="unit">명</span></div><div class="note">step 001 완료 기준</div></div>
+  <div class="tile"><div class="label">온보딩 완료 (step 114)</div><div class="value">${FINAL}<span class="unit">명</span></div><div class="note">완주율 ${pct(FINAL/START*100)}</div></div>`;
+
+// ---------- tooltip ----------
+const tt=document.getElementById('tt');
+function showTT(ev,html){ tt.innerHTML=html; tt.style.opacity=1; moveTT(ev); }
+function moveTT(ev){
+  const w=tt.offsetWidth,h=tt.offsetHeight;
+  let x=ev.clientX+14,y=ev.clientY-h-10;
+  if(x+w>innerWidth-8)x=ev.clientX-w-14; if(y<8)y=ev.clientY+16;
+  tt.style.left=x+'px'; tt.style.top=y+'px';
+}
+function hideTT(){ tt.style.opacity=0; }
+function stepTT(s){
+  return `<b>step ${s.num}</b> · ${s.desc}<br>
+  <span class="tt-muted">진입</span> ${s.enter}명 → <span class="tt-muted">완료</span> ${s.comp}명<br>
+  <span class="tt-muted">이탈</span> ${s.churn}명 (${pct(s.rate)})${cpSet.has(s.num)?'<br><span class="tt-muted">◆ 체크포인트 스텝</span>':''}`;
+}
+
+document.querySelectorAll('.help').forEach(el=>{
+  el.addEventListener('mousemove',ev=>showTT(ev,el.dataset.tip));
+  el.addEventListener('mouseleave',hideTT);
+  el.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();});
+});
+
+// ---------- charts (responsive) ----------
+const N=S.length, GAP=2, PAD_L=34, PAD_R=10, MIN_BW=6, MAX_BW=22;
+const NS='http://www.w3.org/2000/svg';
+function el(n,attrs){const e=document.createElementNS(NS,n);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function attach(hit,s){
+  hit.addEventListener('mousemove',ev=>{showTT(ev,stepTT(s));});
+  hit.addEventListener('mouseleave',hideTT);
+}
+function barPath(x,BW,base,bh){
+  const top=base-bh, rr=Math.min(3,bh,BW/2);
+  return `M${x},${base} V${top+rr} Q${x},${top} ${x+rr},${top} H${x+BW-rr} Q${x+BW},${top} ${x+BW},${top+rr} V${base} Z`;
+}
+function drawMain(W,BW){
+  const H=230, PT=18, PB=26, plotH=H-PT-PB;
+  const svg=el('svg',{width:W,height:H});
+  const y=v=>PT+plotH*(1-v/START);
+  [0,30,60,90].forEach(v=>{
+    svg.appendChild(el('line',{x1:PAD_L,x2:W-PAD_R,y1:y(v),y2:y(v),
+      stroke:v===0?'var(--baseline)':'var(--grid)','stroke-width':1}));
+    const t=el('text',{x:PAD_L-6,y:y(v)+3.5,'text-anchor':'end',class:'axis-t'});
+    t.textContent=v; svg.appendChild(t);
+  });
+  S.forEach((s,i)=>{
+    const x=PAD_L+i*(BW+GAP), base=PT+plotH;
+    const bh=Math.max(plotH*s.comp/START,1.5);
+    svg.appendChild(el('path',{d:barPath(x,BW,base,bh),fill:'var(--blue)'}));
+    const hit=el('rect',{x:x-GAP/2,y:PT,width:BW+GAP,height:plotH,fill:'transparent'});
+    attach(hit,s); svg.appendChild(hit);
+    if(cpSet.has(s.num)){
+      const m=el('text',{x:x+BW/2,y:H-14,'text-anchor':'middle',class:'cp-t'});
+      m.textContent='◆'; svg.appendChild(m);
+      const l=el('text',{x:x+BW/2,y:H-3,'text-anchor':'middle',class:'axis-t'});
+      l.textContent=s.num; svg.appendChild(l);
+    } else if(i===0){
+      const l=el('text',{x:x+BW/2,y:H-3,'text-anchor':'middle',class:'axis-t'});
+      l.textContent=s.num; svg.appendChild(l);
+    }
+    if(i===0||i===N-1){
+      const d=el('text',{x:x+BW/2,y:base-bh-5,'text-anchor':'middle',class:'dlabel'});
+      d.textContent=s.comp; svg.appendChild(d);
+    }
+  });
+  return svg;
+}
+function drawChurn(W,BW){
+  const H=96, PT=14, PB=6, plotH=H-PT-PB, MAX=40;
+  const svg=el('svg',{width:W,height:H});
+  const y=v=>PT+plotH*(1-v/MAX);
+  [0,20,40].forEach(v=>{
+    svg.appendChild(el('line',{x1:PAD_L,x2:W-PAD_R,y1:y(v),y2:y(v),
+      stroke:v===0?'var(--baseline)':'var(--grid)','stroke-width':1}));
+    const t=el('text',{x:PAD_L-6,y:y(v)+3.5,'text-anchor':'end',class:'axis-t'});
+    t.textContent=v; svg.appendChild(t);
+  });
+  S.forEach((s,i)=>{
+    const x=PAD_L+i*(BW+GAP), base=PT+plotH;
+    if(s.rate>0){
+      const bh=Math.max(plotH*Math.min(s.rate,MAX)/MAX,1.5);
+      svg.appendChild(el('path',{d:barPath(x,BW,base,bh),fill:'var(--orange)'}));
+      if(s.rate>=20){
+        const d=el('text',{x:x+BW/2,y:base-bh-4,'text-anchor':'middle',class:'dlabel'});
+        d.textContent=s.num; svg.appendChild(d);
+      }
+    }
+    const hit=el('rect',{x:x-GAP/2,y:PT,width:BW+GAP,height:plotH,fill:'transparent'});
+    attach(hit,s); svg.appendChild(hit);
+  });
+  return svg;
+}
+let lastBW=null;
+function renderCharts(force){
+  const mainHost=document.getElementById('mainChart');
+  const churnHost=document.getElementById('churnChart');
+  const avail=mainHost.parentElement.clientWidth||mainHost.clientWidth;
+  if(!avail) return;
+  let BW=(avail-PAD_L-PAD_R)/N-GAP;
+  BW=Math.min(MAX_BW,Math.max(MIN_BW,BW));
+  BW=Math.round(BW*100)/100;
+  if(!force&&BW===lastBW) return;
+  lastBW=BW;
+  const W=Math.max(avail,PAD_L+PAD_R+N*(BW+GAP));
+  mainHost.innerHTML=''; mainHost.appendChild(drawMain(W,BW));
+  churnHost.innerHTML=''; churnHost.appendChild(drawChurn(W,BW));
+}
+renderCharts(true);
+let rzT; addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>renderCharts(false),120);});
+
+document.getElementById('chartInsight').innerHTML=
+  `<b>요약:</b> 90명이 온보딩을 시작해 <b>11명(12.2%)</b>이 마지막 스텝(114)까지 도달했습니다. 초·중반(001~099)은 스텝당 이탈이 0~2명 수준으로 완만하지만, <b>step 100 이후 후반 구간에서 이탈이 급격히 가속</b>됩니다. 특히 <b>step 106 (제작기구 - 망치)</b>은 진입 28명 중 10명이 이탈(35.7%)한 단일 최대 병목입니다.`;
+
+// ---------- top table ----------
+const top10=[...S].sort((a,b)=>b.churn-a.churn||b.rate-a.rate).slice(0,10);
+const maxRate=Math.max(...top10.map(s=>s.rate));
+document.getElementById('topTable').innerHTML=
+ `<thead><tr><th>#</th><th>스텝</th><th>설명</th><th class="num">진입</th><th class="num">완료</th><th class="num">이탈</th><th class="num">이탈율</th><th style="width:120px"></th><th>수준</th></tr></thead><tbody>`+
+ top10.map((s,i)=>`<tr${i===0?' class="hl"':''}>
+   <td class="num">${i+1}</td>
+   <td class="stepcode">step ${s.num}${cpSet.has(s.num)?' ◆':''}</td>
+   <td>${s.desc}</td>
+   <td class="num">${s.enter}</td><td class="num">${s.comp}</td>
+   <td class="num"><b>${s.churn}</b></td><td class="num">${pct(s.rate)}</td>
+   <td><span class="ratebar" style="width:${Math.round(s.rate/maxRate*110)}px"></span></td>
+   <td><span class="badge ${sevClass(s.rate)}">${sevLabel(s.rate)}</span></td>
+ </tr>`).join('')+`</tbody>`;
+
+document.getElementById('topInsight').innerHTML=
+  `<b>패턴:</b> 상위 10개 중 8개가 <b>step 086 이후 후반부</b>(도끼·망치 컨텐츠, 직원 고용 구간)에 몰려 있습니다. 반복 구조인 "제작기구 건설(086 도끼 6.9% → 106 망치 35.7%)"과 "직원 고용" 계열(071·100·101·109 등)에서 이탈이 반복 발생하고 있어, 후반 반복 루프의 동기 부여(보상·목표 제시)를 점검할 필요가 있습니다. 단, 후반 스텝은 아직 진행 중인 유저가 이탈로 집계됐을 가능성도 있습니다.`;
+
+// ---------- full table (descriptions + inline graphs) ----------
+document.getElementById('fullTable').innerHTML=
+ `<thead><tr><th class="num">순서</th><th>스텝</th><th>설명</th><th class="num">진입</th><th style="width:170px">완료(잔존) 유저</th><th class="num">이탈</th><th class="num">이탈율</th></tr></thead><tbody>`+
+ S.map(s=>`<tr${s.rate>=20?' class="hl"':''}>
+   <td class="num" style="color:var(--muted)">${s.i}</td>
+   <td class="stepcode">step ${s.num}${cpSet.has(s.num)?' ◆':''}</td>
+   <td>${s.desc}</td>
+   <td class="num">${s.enter}</td>
+   <td style="white-space:nowrap"><span class="rowbar" style="width:${(s.comp/START*120).toFixed(1)}px"></span><span class="rowval">${s.comp}</span></td>
+   <td class="num">${s.churn>0?`<span class="badge ${sevClass(s.rate)}">${s.churn}</span>`:'<span style="color:var(--muted)">0</span>'}</td>
+   <td class="num">${s.churn>0?pct(s.rate):'<span style="color:var(--muted)">—</span>'}</td>
+ </tr>`).join('')+`</tbody>`;
+
+// ---------- excluded table ----------
+document.getElementById('exclTable').innerHTML=
+ `<thead><tr><th>스텝</th><th>설명</th><th>제외 사유</th><th class="num">완료</th><th class="num">이탈</th></tr></thead><tbody>`+
+ DATA.excluded.map(e=>`<tr${e.churn>0?' class="hl"':''}>
+   <td class="stepcode">step ${e.num}</td>
+   <td>${e.desc}</td>
+   <td><span class="pill">${e.reason}</span></td>
+   <td class="num">${e.comp}</td><td class="num">${e.churn}</td>
+ </tr>`).join('')+`</tbody>`;
+</script>
+</body>
+</html>
