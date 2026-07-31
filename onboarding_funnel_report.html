@@ -115,16 +115,42 @@ details.excl>summary::before{font-size:12px}
 .tbl-scroll{overflow-x:auto}
 .pill{display:inline-block;font-size:11.5px;border:1px solid var(--border);border-radius:999px;padding:1px 9px;color:var(--ink-2);white-space:nowrap}
 .foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--grid);color:var(--muted);font-size:12px;line-height:1.7}
+.hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.meta{margin-top:6px}
+/* date filter */
+.datebar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:18px}
+.dblabel{font-size:12px;color:var(--muted);margin-right:2px}
+.dbsep{width:1px;height:16px;background:var(--border);margin:0 4px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-variant-numeric:tabular-nums;
+  border:1px solid var(--border);background:var(--surface);color:var(--ink-2);
+  border-radius:999px;padding:4px 11px;cursor:pointer;user-select:none;font-family:inherit}
+.chip:hover{color:var(--ink);border-color:var(--baseline)}
+.chip .n{font-size:11px;opacity:.6}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.on .n{opacity:.75}
+.chip.q{color:var(--muted);font-size:12px;padding:4px 10px}
+.chip.q:hover{color:var(--ink)}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <div>
-    <h1>온보딩 메인스텝 퍼널 분석<span class="help" data-tip="기준일 2026-07-27 ~ 2026-07-30 · GA 퍼널 데이터 · 시작 유저 90명 · 사용 스텝 81종 (전체 115종 중, 설계 기준)">?</span></h1>
+    <h1>온보딩 메인스텝 퍼널 분석<span class="help" id="h1tip" data-tip="">?</span></h1>
+    <div class="tags" id="tags"></div>
+    <div class="meta" id="srcMeta">데이터 불러오는 중…</div>
   </div>
-  <button class="theme-btn" id="themeBtn">🌓 테마</button>
+  <div class="hdr-actions">
+    <button class="theme-btn" id="themeBtn">🌓 테마</button>
+  </div>
 </header>
+
+<div class="datebar" id="datebar" hidden></div>
+
+<div id="loadErr" class="callout warn" hidden></div>
+
+<div id="report" hidden>
 
 <div class="kpis" id="kpis"></div>
 
@@ -135,34 +161,556 @@ details.excl>summary::before{font-size:12px}
   <p class="panel-title" style="margin-top:14px"><span class="key" style="background:var(--orange)"></span>스텝 이탈율 (%)</p>
   <div class="chart-scroll"><div class="chart-inner" id="churnChart"></div></div>
 </div>
-<div class="callout" id="chartInsight"></div>
 
 <h2>이탈율이 높은 스텝 TOP 10<span class="help" data-tip="이탈 인원 기준 상위 10개 스텝. 이탈율은 해당 스텝 진입자(직전 스텝 완료자) 대비 비율입니다.">?</span></h2>
 <div class="card tbl-scroll"><table id="topTable"></table></div>
-<div class="callout warn" id="topInsight"></div>
 
-<h2>전체 스텝 상세 (설명 + 그래프)<span class="help" data-tip="사용 스텝 81종의 설명과 수치를 한눈에 볼 수 있는 표입니다. 파란 막대는 잔존 유저 수(시작 90명 대비), 주황 막대는 해당 스텝 이탈율입니다. ◆는 체크포인트 스텝입니다.">?</span></h2>
+<h2>전체 스텝 상세 (설명 + 그래프)<span class="help" id="fullTip" data-tip="">?</span></h2>
 <div class="card">
   <div class="tbl-scroll"><table id="fullTable"></table></div>
 </div>
 
 <details class="excl">
-  <summary>퍼널 분석에 포함되지 않는 스텝 (19종)<span class="help" data-tip="GA 퍼널 정의에는 포함되어 있으나 이벤트가 발화하지 않아(설계상 제외 스텝) 분석에서 제외한 19종입니다. 제외 사유는 퍼널 이벤트 설계안 기준입니다.">?</span></summary>
+  <summary id="exclSummary"></summary>
 <div class="card tbl-scroll"><table id="exclTable"></table></div>
-<div class="callout warn"><b>데이터 정리 필요:</b> main_step_029(딜레이)는 완료 0명임에도 이탈 11명으로 집계되었습니다. GA 퍼널 정의에서 미발화 스텝이 114 뒤에 배치되어, 온보딩을 완주한 11명이 이 스텝에서 이탈한 것으로 잘못 흡수된 데이터 아티팩트입니다. 나머지 18종은 완료·이탈 모두 0으로 퍼널 수치에 영향이 없습니다. 미발화 19종을 GA 퍼널 정의에서 제거하는 것을 권장합니다.</div>
 </details>
 
-<div class="foot">
-  <b>산출 기준</b> · 스텝 이탈율 = (직전 스텝 완료자 − 해당 스텝 완료자) ÷ 직전 스텝 완료자. GA 내보내기에서 동일 완료 수 스텝의 정렬이 스텝 번호 순서와 어긋난 구간(042/043, 046~052)은 스텝 번호 순으로 재정렬 후 재계산했으며, 총 이탈 합계(79명)는 원본과 일치함을 확인했습니다.<br>
-  <b>해석 주의</b> · GA 퍼널의 "이탈"에는 아직 온보딩을 진행 중인 유저(최근 설치)가 포함될 수 있어, 특히 후반부 스텝의 이탈율은 실제 이탈보다 과대 추정될 수 있습니다.<br>
-  스텝 설명 출처: 스프린트 2 퍼널이벤트 설계안 (온보딩 메인스텝 사용/제외 목록)
 </div>
 </div>
 
 <div class="tooltip" id="tt"></div>
 
 <script>
-const DATA = {"start": 90, "final": 11, "steps": [{"i": 1, "num": "001", "desc": "이동하기", "enter": 90, "comp": 90, "churn": 0, "rate": 0.0}, {"i": 2, "num": "002", "desc": "건설 제작기구", "enter": 90, "comp": 89, "churn": 1, "rate": 1.1}, {"i": 3, "num": "004", "desc": "장비 검 제작 알림", "enter": 89, "comp": 88, "churn": 1, "rate": 1.1}, {"i": 4, "num": "005", "desc": "광석 집기", "enter": 88, "comp": 88, "churn": 0, "rate": 0.0}, {"i": 5, "num": "006", "desc": "재료책상에 재료 내려놓기", "enter": 88, "comp": 88, "churn": 0, "rate": 0.0}, {"i": 6, "num": "007", "desc": "장비 제작 시작하기", "enter": 88, "comp": 86, "churn": 2, "rate": 2.3}, {"i": 7, "num": "008", "desc": "장비 제작 하기", "enter": 86, "comp": 86, "churn": 0, "rate": 0.0}, {"i": 8, "num": "009", "desc": "장비 집기", "enter": 86, "comp": 86, "churn": 0, "rate": 0.0}, {"i": 9, "num": "010", "desc": "건설 진열대", "enter": 86, "comp": 86, "churn": 0, "rate": 0.0}, {"i": 10, "num": "011", "desc": "진열 해보기", "enter": 86, "comp": 84, "churn": 2, "rate": 2.3}, {"i": 11, "num": "012", "desc": "휴지통 생성", "enter": 84, "comp": 84, "churn": 0, "rate": 0.0}, {"i": 12, "num": "015", "desc": "손님 알려주기", "enter": 84, "comp": 84, "churn": 0, "rate": 0.0}, {"i": 13, "num": "016", "desc": "손님이 상품을 집기", "enter": 84, "comp": 84, "churn": 0, "rate": 0.0}, {"i": 14, "num": "017", "desc": "건설 계산대", "enter": 84, "comp": 83, "churn": 1, "rate": 1.2}, {"i": 15, "num": "018", "desc": "계산 시작하기", "enter": 83, "comp": 83, "churn": 0, "rate": 0.0}, {"i": 16, "num": "019", "desc": "계산 완료하기", "enter": 83, "comp": 83, "churn": 0, "rate": 0.0}, {"i": 17, "num": "020", "desc": "수금하기", "enter": 83, "comp": 82, "churn": 1, "rate": 1.2}, {"i": 18, "num": "022", "desc": "진열대 포커스 & 광산 해금하기", "enter": 82, "comp": 81, "churn": 1, "rate": 1.2}, {"i": 19, "num": "023", "desc": "광산 들어가보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 20, "num": "024", "desc": "광맥 캐보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 21, "num": "025", "desc": "광석 줏어보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 22, "num": "026", "desc": "광차 해금", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 23, "num": "030", "desc": "광차에 광석 넣기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 24, "num": "032", "desc": "광차 전송해보기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 25, "num": "036", "desc": "광산 나가기", "enter": 81, "comp": 81, "churn": 0, "rate": 0.0}, {"i": 26, "num": "039", "desc": "무기 제작하러가기", "enter": 81, "comp": 80, "churn": 1, "rate": 1.2}, {"i": 27, "num": "040", "desc": "무기 3개 제작하기", "enter": 80, "comp": 78, "churn": 2, "rate": 2.5}, {"i": 28, "num": "041", "desc": "장비 집기", "enter": 78, "comp": 77, "churn": 1, "rate": 1.3}, {"i": 29, "num": "042", "desc": "진열 3개 해보기", "enter": 77, "comp": 77, "churn": 0, "rate": 0.0}, {"i": 30, "num": "043", "desc": "계산하러가기", "enter": 77, "comp": 77, "churn": 0, "rate": 0.0}, {"i": 31, "num": "044", "desc": "계산 2번하기", "enter": 77, "comp": 76, "churn": 1, "rate": 1.3}, {"i": 32, "num": "046", "desc": "훈련장 만석 확인", "enter": 76, "comp": 75, "churn": 1, "rate": 1.3}, {"i": 33, "num": "049", "desc": "할것 확인 버튼 인지하기", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 34, "num": "050", "desc": "훈련장 해금하기", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 35, "num": "051", "desc": "건설 허수아비", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 36, "num": "052", "desc": "허수아비 수리 필요", "enter": 75, "comp": 75, "churn": 0, "rate": 0.0}, {"i": 37, "num": "054", "desc": "훈련장 확인 버튼 인지하기", "enter": 75, "comp": 74, "churn": 1, "rate": 1.3}, {"i": 38, "num": "055", "desc": "허수아비 수리 시작하기", "enter": 74, "comp": 73, "churn": 1, "rate": 1.4}, {"i": 39, "num": "056", "desc": "허수아비 수리 완료하기", "enter": 73, "comp": 72, "churn": 1, "rate": 1.4}, {"i": 40, "num": "060", "desc": "직원 고용 - 검 제작", "enter": 72, "comp": 71, "churn": 1, "rate": 1.4}, {"i": 41, "num": "062", "desc": "직원 고용 - 광석 1", "enter": 71, "comp": 69, "churn": 2, "rate": 2.8}, {"i": 42, "num": "065", "desc": "진열대까지 이동", "enter": 69, "comp": 69, "churn": 0, "rate": 0.0}, {"i": 43, "num": "067", "desc": "시설(진열대) 업그레이드 진입해보기", "enter": 69, "comp": 69, "churn": 0, "rate": 0.0}, {"i": 44, "num": "068", "desc": "시설(진열대) 업그레이드 해보기", "enter": 69, "comp": 68, "churn": 1, "rate": 1.4}, {"i": 45, "num": "069", "desc": "시설(진열대) 업그레이드 닫기", "enter": 68, "comp": 67, "churn": 1, "rate": 1.5}, {"i": 46, "num": "070", "desc": "허수아비 2", "enter": 67, "comp": 67, "churn": 0, "rate": 0.0}, {"i": 47, "num": "071", "desc": "직원 고용 - 진열 1", "enter": 67, "comp": 61, "churn": 6, "rate": 9.0}, {"i": 48, "num": "072", "desc": "장비 업그레이드 가능 알림", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 49, "num": "074", "desc": "장비 업그레이드 진입해보기", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 50, "num": "075", "desc": "장비 검 강화해보기", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 51, "num": "076", "desc": "장비 업그레이드 닫기", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 52, "num": "077", "desc": "직원 고용 - 수리 1", "enter": 61, "comp": 61, "churn": 0, "rate": 0.0}, {"i": 53, "num": "079", "desc": "직원 업그레이드 팝업 열기", "enter": 61, "comp": 60, "churn": 1, "rate": 1.6}, {"i": 54, "num": "080", "desc": "직원 업그레이드 해보기", "enter": 60, "comp": 60, "churn": 0, "rate": 0.0}, {"i": 55, "num": "081", "desc": "직원 업그레이드 팝업 닫기", "enter": 60, "comp": 60, "churn": 0, "rate": 0.0}, {"i": 56, "num": "083", "desc": "허수아비 3", "enter": 60, "comp": 60, "churn": 0, "rate": 0.0}, {"i": 57, "num": "084", "desc": "건설 - 진열대 검 2", "enter": 60, "comp": 58, "churn": 2, "rate": 3.3}, {"i": 58, "num": "085", "desc": "허수아비 4", "enter": 58, "comp": 58, "churn": 0, "rate": 0.0}, {"i": 59, "num": "086", "desc": "제작기구 - 도끼", "enter": 58, "comp": 54, "churn": 4, "rate": 6.9}, {"i": 60, "num": "088", "desc": "장비 도끼 제작 알림", "enter": 54, "comp": 51, "churn": 3, "rate": 5.6}, {"i": 61, "num": "090", "desc": "허수아비 5(훈련장 확장)", "enter": 51, "comp": 51, "churn": 0, "rate": 0.0}, {"i": 62, "num": "091", "desc": "건설 - 진열대 도끼 2", "enter": 51, "comp": 48, "churn": 3, "rate": 5.9}, {"i": 63, "num": "092", "desc": "더미까지 이동", "enter": 48, "comp": 48, "churn": 0, "rate": 0.0}, {"i": 64, "num": "095", "desc": "시설(더미) 업그레이드 진입해보기", "enter": 48, "comp": 46, "churn": 2, "rate": 4.2}, {"i": 65, "num": "096", "desc": "시설(더미) 업그레이드 해보기", "enter": 46, "comp": 46, "churn": 0, "rate": 0.0}, {"i": 66, "num": "097", "desc": "시설(더미) 업그레이드 닫기", "enter": 46, "comp": 46, "churn": 0, "rate": 0.0}, {"i": 67, "num": "099", "desc": "직원 고용 - 도끼 제작", "enter": 46, "comp": 46, "churn": 0, "rate": 0.0}, {"i": 68, "num": "100", "desc": "직원 고용 - 수리 2", "enter": 46, "comp": 42, "churn": 4, "rate": 8.7}, {"i": 69, "num": "101", "desc": "직원 고용 - 광석 2", "enter": 42, "comp": 38, "churn": 4, "rate": 9.5}, {"i": 70, "num": "102", "desc": "허수아비 6", "enter": 38, "comp": 33, "churn": 5, "rate": 13.2}, {"i": 71, "num": "103", "desc": "진열대 설치 - 도끼 1", "enter": 33, "comp": 31, "churn": 2, "rate": 6.1}, {"i": 72, "num": "104", "desc": "직원 고용 - 진열 2", "enter": 31, "comp": 30, "churn": 1, "rate": 3.2}, {"i": 73, "num": "105", "desc": "건설 - 진열대 망치 2", "enter": 30, "comp": 28, "churn": 2, "rate": 6.7}, {"i": 74, "num": "106", "desc": "제작기구 - 망치", "enter": 28, "comp": 18, "churn": 10, "rate": 35.7}, {"i": 75, "num": "108", "desc": "장비 망치 제작 알림", "enter": 18, "comp": 16, "churn": 2, "rate": 11.1}, {"i": 76, "num": "109", "desc": "직원 고용 - 망치 제작", "enter": 16, "comp": 16, "churn": 0, "rate": 0.0}, {"i": 77, "num": "110", "desc": "진열대 설치 - 망치 1", "enter": 16, "comp": 15, "churn": 1, "rate": 6.2}, {"i": 78, "num": "111", "desc": "직원 고용 - 수리 3", "enter": 15, "comp": 15, "churn": 0, "rate": 0.0}, {"i": 79, "num": "112", "desc": "허수아비 7", "enter": 15, "comp": 14, "churn": 1, "rate": 6.7}, {"i": 80, "num": "113", "desc": "허수아비 8", "enter": 14, "comp": 13, "churn": 1, "rate": 7.1}, {"i": 81, "num": "114", "desc": "직원 고용 - 광석 3", "enter": 13, "comp": 11, "churn": 2, "rate": 15.4}], "segments": [{"from": "시작", "to": "051", "enter": 90, "exit": 75, "churn": 15, "rate": 16.7}, {"from": "051", "to": "070", "enter": 75, "exit": 67, "churn": 8, "rate": 10.7}, {"from": "070", "to": "077", "enter": 67, "exit": 61, "churn": 6, "rate": 9.0}, {"from": "077", "to": "083", "enter": 61, "exit": 60, "churn": 1, "rate": 1.6}, {"from": "083", "to": "099", "enter": 60, "exit": 46, "churn": 14, "rate": 23.3}, {"from": "099", "to": "114", "enter": 46, "exit": 11, "churn": 35, "rate": 76.1}], "excluded": [{"num": "003", "desc": "건설 대기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "013", "desc": "Contents Unlock - CustomerManager", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "014", "desc": "Contents Unlock - CustomerOrder", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "021", "desc": "딜레이 & 손님 스폰 포인트 원복", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "027", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "028", "desc": "광차 생성 완료 기다리기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "029", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 11}, {"num": "031", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "033", "desc": "광차 전송 완료 기다리기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "034", "desc": "카메라 전환 대기", "reason": "대기", "comp": 0, "churn": 0}, {"num": "035", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "037", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "038", "desc": "Contents Unlock - ViewMineProgressBar", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "045", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "053", "desc": "Contents Unlock - ViewTrainingCenter", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}, {"num": "057", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "058", "desc": "훈련장 골드 발판 포커싱", "reason": "연출", "comp": 0, "churn": 0}, {"num": "059", "desc": "딜레이", "reason": "딜레이", "comp": 0, "churn": 0}, {"num": "064", "desc": "Contents Unlock - DisplayStandUpgrade", "reason": "컨텐츠 언락", "comp": 0, "churn": 0}], "checkpoints": ["051", "070", "077", "083", "099", "114"]};
+const CONFIG = {
+  // 마지막 스텝 완료자를 '완료' 스텝으로 한 칸 더 표기 (null 이면 미표기)
+  terminalStep: { num:'115', desc:'온보딩 완료' },
+  tags: ['Country code : US', 'First build 3.3.0'],
+  totalStepCount: 115,
+  checkpoints: ["051", "070", "077", "083", "099", "114"],
+  desc: {"001": "이동하기","002": "건설 제작기구","004": "장비 검 제작 알림","005": "광석 집기","006": "재료책상에 재료 내려놓기","007": "장비 제작 시작하기","008": "장비 제작 하기","009": "장비 집기","010": "건설 진열대","011": "진열 해보기","012": "휴지통 생성","015": "손님 알려주기","016": "손님이 상품을 집기","017": "건설 계산대","018": "계산 시작하기","019": "계산 완료하기","020": "수금하기","022": "진열대 포커스 & 광산 해금하기","023": "광산 들어가보기","024": "광맥 캐보기","025": "광석 줏어보기","026": "광차 해금","030": "광차에 광석 넣기","032": "광차 전송해보기","036": "광산 나가기","039": "무기 제작하러가기","040": "무기 3개 제작하기","041": "장비 집기","042": "진열 3개 해보기","043": "계산하러가기","044": "계산 2번하기","046": "훈련장 만석 확인","049": "할것 확인 버튼 인지하기","050": "훈련장 해금하기","051": "건설 허수아비","052": "허수아비 수리 필요","054": "훈련장 확인 버튼 인지하기","055": "허수아비 수리 시작하기","056": "허수아비 수리 완료하기","060": "직원 고용 - 검 제작","062": "직원 고용 - 광석 1","065": "진열대까지 이동","067": "시설(진열대) 업그레이드 진입해보기","068": "시설(진열대) 업그레이드 해보기","069": "시설(진열대) 업그레이드 닫기","070": "허수아비 2","071": "직원 고용 - 진열 1","072": "장비 업그레이드 가능 알림","074": "장비 업그레이드 진입해보기","075": "장비 검 강화해보기","076": "장비 업그레이드 닫기","077": "직원 고용 - 수리 1","079": "직원 업그레이드 팝업 열기","080": "직원 업그레이드 해보기","081": "직원 업그레이드 팝업 닫기","083": "허수아비 3","084": "건설 - 진열대 검 2","085": "허수아비 4","086": "제작기구 - 도끼","088": "장비 도끼 제작 알림","090": "허수아비 5(훈련장 확장)","091": "건설 - 진열대 도끼 2","092": "더미까지 이동","095": "시설(더미) 업그레이드 진입해보기","096": "시설(더미) 업그레이드 해보기","097": "시설(더미) 업그레이드 닫기","099": "직원 고용 - 도끼 제작","100": "직원 고용 - 수리 2","101": "직원 고용 - 광석 2","102": "허수아비 6","103": "진열대 설치 - 도끼 1","104": "직원 고용 - 진열 2","105": "건설 - 진열대 망치 2","106": "제작기구 - 망치","108": "장비 망치 제작 알림","109": "직원 고용 - 망치 제작","110": "진열대 설치 - 망치 1","111": "직원 고용 - 수리 3","112": "허수아비 7","113": "허수아비 8","114": "직원 고용 - 광석 3","003": "건설 대기","013": "Contents Unlock - CustomerManager","014": "Contents Unlock - CustomerOrder","021": "딜레이 & 손님 스폰 포인트 원복","027": "딜레이","028": "광차 생성 완료 기다리기","029": "딜레이","031": "딜레이","033": "광차 전송 완료 기다리기","034": "카메라 전환 대기","035": "딜레이","037": "딜레이","038": "Contents Unlock - ViewMineProgressBar","045": "딜레이","053": "Contents Unlock - ViewTrainingCenter","057": "딜레이","058": "훈련장 골드 발판 포커싱","059": "딜레이","064": "Contents Unlock - DisplayStandUpgrade"},
+  reason: {"003": "대기","013": "컨텐츠 언락","014": "컨텐츠 언락","021": "딜레이","027": "딜레이","028": "대기","029": "딜레이","031": "딜레이","033": "대기","034": "대기","035": "딜레이","037": "딜레이","038": "컨텐츠 언락","045": "딜레이","053": "컨텐츠 언락","057": "딜레이","058": "연출","059": "딜레이","064": "컨텐츠 언락"}
+};
+
+// ---------- 데이터셋 (CSV 원문을 그대로 넣어두면 됩니다) ----------
+// 새 날짜 추가: { key, from, to, label, text:`<CSV 원문>` } 를 배열에 추가
+// start: 퍼센트만으로 유저 수를 역산할 수 없는 경우에만 직접 지정
+const DATASETS = [
+  { key:'2026-07-27', from:'2026-07-27', to:'2026-07-27', label:'07-27', start:1, text:`
+Step,Step details,Step completion,Churn,Total completion
+1,Onboarding or main_step_001,100,0,100
+2,Onboarding or main_step_002,100,0,100
+3,Onboarding or main_step_004,100,0,100
+4,Onboarding or main_step_005,100,0,100
+5,Onboarding or main_step_006,100,0,100
+6,Onboarding or main_step_007,100,0,100
+7,Onboarding or main_step_008,100,0,100
+8,Onboarding or main_step_009,100,0,100
+9,Onboarding or main_step_010,100,0,100
+10,Onboarding or main_step_011,100,0,100
+11,Onboarding or main_step_012,100,0,100
+12,Onboarding or main_step_015,100,0,100
+13,Onboarding or main_step_016,100,0,100
+14,Onboarding or main_step_017,100,0,100
+15,Onboarding or main_step_018,100,0,100
+16,Onboarding or main_step_019,100,0,100
+17,Onboarding or main_step_020,100,0,100
+18,Onboarding or main_step_022,100,0,100
+19,Onboarding or main_step_023,100,0,100
+20,Onboarding or main_step_024,100,0,100
+21,Onboarding or main_step_025,100,0,100
+22,Onboarding or main_step_026,100,0,100
+23,Onboarding or main_step_030,100,0,100
+24,Onboarding or main_step_032,100,0,100
+25,Onboarding or main_step_036,100,0,100
+26,Onboarding or main_step_039,100,0,100
+27,Onboarding or main_step_040,100,0,100
+28,Onboarding or main_step_041,100,0,100
+29,Onboarding or main_step_043,100,0,100
+30,Onboarding or main_step_042,100,0,100
+31,Onboarding or main_step_044,100,0,100
+32,Onboarding or main_step_051,100,0,100
+33,Onboarding or main_step_052,100,0,100
+34,Onboarding or main_step_046,100,0,100
+35,Onboarding or main_step_049,100,0,100
+36,Onboarding or main_step_050,100,0,100
+37,Onboarding or main_step_054,100,0,100
+38,Onboarding or main_step_055,100,0,100
+39,Onboarding or main_step_056,100,0,100
+40,Onboarding or main_step_060,100,0,100
+41,Onboarding or main_step_062,0,100,0
+42,Onboarding or main_step_065,0,0,0
+43,Onboarding or main_step_067,0,0,0
+44,Onboarding or main_step_068,0,0,0
+45,Onboarding or main_step_069,0,0,0
+46,Onboarding or main_step_070,0,0,0
+47,Onboarding or main_step_071,0,0,0
+48,Onboarding or main_step_072,0,0,0
+49,Onboarding or main_step_074,0,0,0
+50,Onboarding or main_step_075,0,0,0
+51,Onboarding or main_step_076,0,0,0
+52,Onboarding or main_step_077,0,0,0
+53,Onboarding or main_step_079,0,0,0
+54,Onboarding or main_step_080,0,0,0
+55,Onboarding or main_step_081,0,0,0
+56,Onboarding or main_step_083,0,0,0
+57,Onboarding or main_step_084,0,0,0
+58,Onboarding or main_step_085,0,0,0
+59,Onboarding or main_step_086,0,0,0
+60,Onboarding or main_step_088,0,0,0
+61,Onboarding or main_step_090,0,0,0
+62,Onboarding or main_step_091,0,0,0
+63,Onboarding or main_step_092,0,0,0
+64,Onboarding or main_step_095,0,0,0
+65,Onboarding or main_step_096,0,0,0
+66,Onboarding or main_step_097,0,0,0
+67,Onboarding or main_step_099,0,0,0
+68,Onboarding or main_step_100,0,0,0
+69,Onboarding or main_step_101,0,0,0
+70,Onboarding or main_step_102,0,0,0
+71,Onboarding or main_step_103,0,0,0
+72,Onboarding or main_step_104,0,0,0
+73,Onboarding or main_step_105,0,0,0
+74,Onboarding or main_step_106,0,0,0
+75,Onboarding or main_step_108,0,0,0
+76,Onboarding or main_step_109,0,0,0
+77,Onboarding or main_step_110,0,0,0
+78,Onboarding or main_step_111,0,0,0
+79,Onboarding or main_step_112,0,0,0
+80,Onboarding or main_step_113,0,0,0
+81,Onboarding or main_step_114,0,0,0
+82,Onboarding or main_step_029,0,0,0
+83,Onboarding or main_step_003,0,0,0
+84,Onboarding or main_step_027,0,0,0
+85,Onboarding or main_step_028,0,0,0
+86,Onboarding or main_step_013,0,0,0
+87,Onboarding or main_step_014,0,0,0
+88,Onboarding or main_step_021,0,0,0
+89,Onboarding or main_step_031,0,0,0
+90,Onboarding or main_step_033,0,0,0
+91,Onboarding or main_step_034,0,0,0
+92,Onboarding or main_step_035,0,0,0
+93,Onboarding or main_step_037,0,0,0
+94,Onboarding or main_step_038,0,0,0
+95,Onboarding or main_step_057,0,0,0
+96,Onboarding or main_step_058,0,0,0
+97,Onboarding or main_step_059,0,0,0
+98,Onboarding or main_step_064,0,0,0
+99,Onboarding or main_step_045,0,0,0
+100,Onboarding or main_step_053,0,0,0
+` },
+  { key:'2026-07-28', from:'2026-07-28', to:'2026-07-28', label:'07-28', text:`
+Step,Step details,Step completion,Churn,Total completion
+1,Onboarding or main_step_001,100,0,100
+2,Onboarding or main_step_002,100,0,100
+3,Onboarding or main_step_004,97.22,2.78,97.22
+4,Onboarding or main_step_005,100,0,97.22
+5,Onboarding or main_step_006,100,0,97.22
+6,Onboarding or main_step_007,97.14,2.86,94.44
+7,Onboarding or main_step_008,100,0,94.44
+8,Onboarding or main_step_009,100,0,94.44
+9,Onboarding or main_step_010,100,0,94.44
+10,Onboarding or main_step_011,100,0,94.44
+11,Onboarding or main_step_012,100,0,94.44
+12,Onboarding or main_step_015,100,0,94.44
+13,Onboarding or main_step_016,100,0,94.44
+14,Onboarding or main_step_017,97.06,2.94,91.67
+15,Onboarding or main_step_018,100,0,91.67
+16,Onboarding or main_step_019,100,0,91.67
+17,Onboarding or main_step_020,96.97,3.03,88.89
+18,Onboarding or main_step_022,96.88,3.13,86.11
+19,Onboarding or main_step_023,100,0,86.11
+20,Onboarding or main_step_024,100,0,86.11
+21,Onboarding or main_step_025,100,0,86.11
+22,Onboarding or main_step_026,96.77,3.23,83.33
+23,Onboarding or main_step_030,100,0,83.33
+24,Onboarding or main_step_032,100,0,83.33
+25,Onboarding or main_step_036,100,0,83.33
+26,Onboarding or main_step_039,100,0,83.33
+27,Onboarding or main_step_040,93.33,6.67,77.78
+28,Onboarding or main_step_041,100,0,77.78
+29,Onboarding or main_step_043,100,0,77.78
+30,Onboarding or main_step_042,100,0,77.78
+31,Onboarding or main_step_044,100,0,77.78
+32,Onboarding or main_step_051,96.43,3.57,75
+33,Onboarding or main_step_052,100,0,75
+34,Onboarding or main_step_046,100,0,75
+35,Onboarding or main_step_049,100,0,75
+36,Onboarding or main_step_050,100,0,75
+37,Onboarding or main_step_054,100,0,75
+38,Onboarding or main_step_055,100,0,75
+39,Onboarding or main_step_056,96.3,3.7,72.22
+40,Onboarding or main_step_060,96.15,3.85,69.44
+41,Onboarding or main_step_062,96,4,66.67
+42,Onboarding or main_step_065,100,0,66.67
+43,Onboarding or main_step_067,100,0,66.67
+44,Onboarding or main_step_068,100,0,66.67
+45,Onboarding or main_step_069,95.83,4.17,63.89
+46,Onboarding or main_step_070,100,0,63.89
+47,Onboarding or main_step_071,91.3,8.7,58.33
+48,Onboarding or main_step_072,100,0,58.33
+49,Onboarding or main_step_074,100,0,58.33
+50,Onboarding or main_step_075,100,0,58.33
+51,Onboarding or main_step_076,100,0,58.33
+52,Onboarding or main_step_077,100,0,58.33
+53,Onboarding or main_step_079,100,0,58.33
+54,Onboarding or main_step_080,100,0,58.33
+55,Onboarding or main_step_081,100,0,58.33
+56,Onboarding or main_step_083,100,0,58.33
+57,Onboarding or main_step_084,100,0,58.33
+58,Onboarding or main_step_085,100,0,58.33
+59,Onboarding or main_step_086,90.48,9.52,52.78
+60,Onboarding or main_step_088,94.74,5.26,50
+61,Onboarding or main_step_090,100,0,50
+62,Onboarding or main_step_091,94.44,5.56,47.22
+63,Onboarding or main_step_092,100,0,47.22
+64,Onboarding or main_step_095,100,0,47.22
+65,Onboarding or main_step_096,100,0,47.22
+66,Onboarding or main_step_097,100,0,47.22
+67,Onboarding or main_step_099,100,0,47.22
+68,Onboarding or main_step_100,100,0,47.22
+69,Onboarding or main_step_101,88.24,11.76,41.67
+70,Onboarding or main_step_102,93.33,6.67,38.89
+71,Onboarding or main_step_103,100,0,38.89
+72,Onboarding or main_step_104,92.86,7.14,36.11
+73,Onboarding or main_step_105,84.62,15.38,30.56
+74,Onboarding or main_step_106,72.73,27.27,22.22
+75,Onboarding or main_step_108,87.5,12.5,19.44
+76,Onboarding or main_step_109,100,0,19.44
+77,Onboarding or main_step_110,100,0,19.44
+78,Onboarding or main_step_111,100,0,19.44
+79,Onboarding or main_step_112,100,0,19.44
+80,Onboarding or main_step_113,85.71,14.29,16.67
+81,Onboarding or main_step_114,50,50,8.33
+82,Onboarding or main_step_029,0,100,0
+83,Onboarding or main_step_003,0,0,0
+84,Onboarding or main_step_027,0,0,0
+85,Onboarding or main_step_028,0,0,0
+86,Onboarding or main_step_013,0,0,0
+87,Onboarding or main_step_014,0,0,0
+88,Onboarding or main_step_021,0,0,0
+89,Onboarding or main_step_031,0,0,0
+90,Onboarding or main_step_033,0,0,0
+91,Onboarding or main_step_034,0,0,0
+92,Onboarding or main_step_035,0,0,0
+93,Onboarding or main_step_037,0,0,0
+94,Onboarding or main_step_038,0,0,0
+95,Onboarding or main_step_057,0,0,0
+96,Onboarding or main_step_058,0,0,0
+97,Onboarding or main_step_059,0,0,0
+98,Onboarding or main_step_064,0,0,0
+99,Onboarding or main_step_045,0,0,0
+100,Onboarding or main_step_053,0,0,0
+` },
+  { key:'2026-07-29', from:'2026-07-29', to:'2026-07-29', label:'07-29', text:`
+Step,Step details,Step completion,Churn,Total completion
+1,Onboarding or main_step_001,100,0,100
+2,Onboarding or main_step_002,97.67,2.33,97.67
+3,Onboarding or main_step_004,100,0,97.67
+4,Onboarding or main_step_005,100,0,97.67
+5,Onboarding or main_step_006,100,0,97.67
+6,Onboarding or main_step_007,97.62,2.38,95.35
+7,Onboarding or main_step_008,100,0,95.35
+8,Onboarding or main_step_009,100,0,95.35
+9,Onboarding or main_step_010,100,0,95.35
+10,Onboarding or main_step_011,95.12,4.88,90.7
+11,Onboarding or main_step_012,100,0,90.7
+12,Onboarding or main_step_015,100,0,90.7
+13,Onboarding or main_step_016,100,0,90.7
+14,Onboarding or main_step_017,100,0,90.7
+15,Onboarding or main_step_018,100,0,90.7
+16,Onboarding or main_step_019,100,0,90.7
+17,Onboarding or main_step_020,100,0,90.7
+18,Onboarding or main_step_022,100,0,90.7
+19,Onboarding or main_step_023,100,0,90.7
+20,Onboarding or main_step_024,100,0,90.7
+21,Onboarding or main_step_025,100,0,90.7
+22,Onboarding or main_step_026,100,0,90.7
+23,Onboarding or main_step_030,100,0,90.7
+24,Onboarding or main_step_032,100,0,90.7
+25,Onboarding or main_step_036,100,0,90.7
+26,Onboarding or main_step_039,97.44,2.56,88.37
+27,Onboarding or main_step_040,100,0,88.37
+28,Onboarding or main_step_041,97.37,2.63,86.05
+29,Onboarding or main_step_043,100,0,86.05
+30,Onboarding or main_step_042,100,0,86.05
+31,Onboarding or main_step_044,100,0,86.05
+32,Onboarding or main_step_051,97.3,2.7,83.72
+33,Onboarding or main_step_052,100,0,83.72
+34,Onboarding or main_step_046,100,0,83.72
+35,Onboarding or main_step_049,100,0,83.72
+36,Onboarding or main_step_050,100,0,83.72
+37,Onboarding or main_step_054,100,0,83.72
+38,Onboarding or main_step_055,97.22,2.78,81.4
+39,Onboarding or main_step_056,100,0,81.4
+40,Onboarding or main_step_060,100,0,81.4
+41,Onboarding or main_step_062,100,0,81.4
+42,Onboarding or main_step_065,100,0,81.4
+43,Onboarding or main_step_067,100,0,81.4
+44,Onboarding or main_step_068,97.14,2.86,79.07
+45,Onboarding or main_step_069,97.06,2.94,76.74
+46,Onboarding or main_step_070,100,0,76.74
+47,Onboarding or main_step_071,87.88,12.12,67.44
+48,Onboarding or main_step_072,96.55,3.45,65.12
+49,Onboarding or main_step_074,100,0,65.12
+50,Onboarding or main_step_075,100,0,65.12
+51,Onboarding or main_step_076,100,0,65.12
+52,Onboarding or main_step_077,100,0,65.12
+53,Onboarding or main_step_079,96.43,3.57,62.79
+54,Onboarding or main_step_080,100,0,62.79
+55,Onboarding or main_step_081,100,0,62.79
+56,Onboarding or main_step_083,100,0,62.79
+57,Onboarding or main_step_084,96.3,3.7,60.47
+58,Onboarding or main_step_085,100,0,60.47
+59,Onboarding or main_step_086,96.15,3.85,58.14
+60,Onboarding or main_step_088,96,4,55.81
+61,Onboarding or main_step_090,100,0,55.81
+62,Onboarding or main_step_091,95.83,4.17,53.49
+63,Onboarding or main_step_092,100,0,53.49
+64,Onboarding or main_step_095,91.3,8.7,48.84
+65,Onboarding or main_step_096,100,0,48.84
+66,Onboarding or main_step_097,100,0,48.84
+67,Onboarding or main_step_099,100,0,48.84
+68,Onboarding or main_step_100,95.24,4.76,46.51
+69,Onboarding or main_step_101,95,5,44.19
+70,Onboarding or main_step_102,84.21,15.79,37.21
+71,Onboarding or main_step_103,87.5,12.5,32.56
+72,Onboarding or main_step_104,100,0,32.56
+73,Onboarding or main_step_105,92.86,7.14,30.23
+74,Onboarding or main_step_106,61.54,38.46,18.6
+75,Onboarding or main_step_108,87.5,12.5,16.28
+76,Onboarding or main_step_109,100,0,16.28
+77,Onboarding or main_step_110,100,0,16.28
+78,Onboarding or main_step_111,85.71,14.29,13.95
+79,Onboarding or main_step_112,100,0,13.95
+80,Onboarding or main_step_113,50,50,6.98
+81,Onboarding or main_step_114,100,0,6.98
+82,Onboarding or main_step_029,0,100,0
+83,Onboarding or main_step_003,0,0,0
+84,Onboarding or main_step_027,0,0,0
+85,Onboarding or main_step_028,0,0,0
+86,Onboarding or main_step_013,0,0,0
+87,Onboarding or main_step_014,0,0,0
+88,Onboarding or main_step_021,0,0,0
+89,Onboarding or main_step_031,0,0,0
+90,Onboarding or main_step_033,0,0,0
+91,Onboarding or main_step_034,0,0,0
+92,Onboarding or main_step_035,0,0,0
+93,Onboarding or main_step_037,0,0,0
+94,Onboarding or main_step_038,0,0,0
+95,Onboarding or main_step_057,0,0,0
+96,Onboarding or main_step_058,0,0,0
+97,Onboarding or main_step_059,0,0,0
+98,Onboarding or main_step_064,0,0,0
+99,Onboarding or main_step_045,0,0,0
+100,Onboarding or main_step_053,0,0,0
+` },
+  { key:'2026-07-30', from:'2026-07-30', to:'2026-07-30', label:'07-30', text:`
+Step,Step details,Step completion,Churn,Total completion
+1,Onboarding or main_step_001,100,0,100
+2,Onboarding or main_step_002,100,0,100
+3,Onboarding or main_step_004,100,0,100
+4,Onboarding or main_step_005,100,0,100
+5,Onboarding or main_step_006,100,0,100
+6,Onboarding or main_step_007,100,0,100
+7,Onboarding or main_step_008,100,0,100
+8,Onboarding or main_step_009,100,0,100
+9,Onboarding or main_step_010,96.67,3.33,96.67
+10,Onboarding or main_step_011,100,0,96.67
+11,Onboarding or main_step_012,100,0,96.67
+12,Onboarding or main_step_015,100,0,96.67
+13,Onboarding or main_step_016,100,0,96.67
+14,Onboarding or main_step_017,100,0,96.67
+15,Onboarding or main_step_018,100,0,96.67
+16,Onboarding or main_step_019,100,0,96.67
+17,Onboarding or main_step_020,100,0,96.67
+18,Onboarding or main_step_022,100,0,96.67
+19,Onboarding or main_step_023,100,0,96.67
+20,Onboarding or main_step_024,100,0,96.67
+21,Onboarding or main_step_025,100,0,96.67
+22,Onboarding or main_step_026,100,0,96.67
+23,Onboarding or main_step_030,100,0,96.67
+24,Onboarding or main_step_032,100,0,96.67
+25,Onboarding or main_step_036,100,0,96.67
+26,Onboarding or main_step_039,100,0,96.67
+27,Onboarding or main_step_040,100,0,96.67
+28,Onboarding or main_step_041,100,0,96.67
+29,Onboarding or main_step_043,100,0,96.67
+30,Onboarding or main_step_042,100,0,96.67
+31,Onboarding or main_step_044,100,0,96.67
+32,Onboarding or main_step_051,100,0,96.67
+33,Onboarding or main_step_052,100,0,96.67
+34,Onboarding or main_step_046,100,0,96.67
+35,Onboarding or main_step_049,100,0,96.67
+36,Onboarding or main_step_050,100,0,96.67
+37,Onboarding or main_step_054,100,0,96.67
+38,Onboarding or main_step_055,100,0,96.67
+39,Onboarding or main_step_056,93.1,6.9,90
+40,Onboarding or main_step_060,96.3,3.7,86.67
+41,Onboarding or main_step_062,92.31,7.69,80
+42,Onboarding or main_step_065,100,0,80
+43,Onboarding or main_step_067,100,0,80
+44,Onboarding or main_step_068,100,0,80
+45,Onboarding or main_step_069,100,0,80
+46,Onboarding or main_step_070,100,0,80
+47,Onboarding or main_step_071,91.67,8.33,73.33
+48,Onboarding or main_step_072,100,0,73.33
+49,Onboarding or main_step_074,100,0,73.33
+50,Onboarding or main_step_075,100,0,73.33
+51,Onboarding or main_step_076,100,0,73.33
+52,Onboarding or main_step_077,100,0,73.33
+53,Onboarding or main_step_079,100,0,73.33
+54,Onboarding or main_step_080,100,0,73.33
+55,Onboarding or main_step_081,100,0,73.33
+56,Onboarding or main_step_083,100,0,73.33
+57,Onboarding or main_step_084,100,0,73.33
+58,Onboarding or main_step_085,100,0,73.33
+59,Onboarding or main_step_086,100,0,73.33
+60,Onboarding or main_step_088,95.45,4.55,70
+61,Onboarding or main_step_090,100,0,70
+62,Onboarding or main_step_091,95.24,4.76,66.67
+63,Onboarding or main_step_092,100,0,66.67
+64,Onboarding or main_step_095,100,0,66.67
+65,Onboarding or main_step_096,100,0,66.67
+66,Onboarding or main_step_097,100,0,66.67
+67,Onboarding or main_step_099,100,0,66.67
+68,Onboarding or main_step_100,85,15,56.67
+69,Onboarding or main_step_101,94.12,5.88,53.33
+70,Onboarding or main_step_102,93.75,6.25,50
+71,Onboarding or main_step_103,73.33,26.67,36.67
+72,Onboarding or main_step_104,81.82,18.18,30
+73,Onboarding or main_step_105,100,0,30
+74,Onboarding or main_step_106,77.78,22.22,23.33
+75,Onboarding or main_step_108,85.71,14.29,20
+76,Onboarding or main_step_109,100,0,20
+77,Onboarding or main_step_110,100,0,20
+78,Onboarding or main_step_111,66.67,33.33,13.33
+79,Onboarding or main_step_112,75,25,10
+80,Onboarding or main_step_113,100,0,10
+81,Onboarding or main_step_114,66.67,33.33,6.67
+82,Onboarding or main_step_029,0,100,0
+83,Onboarding or main_step_003,0,0,0
+84,Onboarding or main_step_027,0,0,0
+85,Onboarding or main_step_028,0,0,0
+86,Onboarding or main_step_013,0,0,0
+87,Onboarding or main_step_014,0,0,0
+88,Onboarding or main_step_021,0,0,0
+89,Onboarding or main_step_031,0,0,0
+90,Onboarding or main_step_033,0,0,0
+91,Onboarding or main_step_034,0,0,0
+92,Onboarding or main_step_035,0,0,0
+93,Onboarding or main_step_037,0,0,0
+94,Onboarding or main_step_038,0,0,0
+95,Onboarding or main_step_057,0,0,0
+96,Onboarding or main_step_058,0,0,0
+97,Onboarding or main_step_059,0,0,0
+98,Onboarding or main_step_064,0,0,0
+99,Onboarding or main_step_045,0,0,0
+100,Onboarding or main_step_053,0,0,0
+` },
+  { key:'2026-07-31', from:'2026-07-31', to:'2026-07-31', label:'07-31', text:`
+Step,Step details,Step completion,Churn,Total completion
+1,Onboarding or main_step_001,100,0,100
+2,Onboarding or main_step_002,100,0,100
+3,Onboarding or main_step_004,100,0,100
+4,Onboarding or main_step_005,100,0,100
+5,Onboarding or main_step_006,100,0,100
+6,Onboarding or main_step_007,100,0,100
+7,Onboarding or main_step_008,100,0,100
+8,Onboarding or main_step_009,100,0,100
+9,Onboarding or main_step_010,100,0,100
+10,Onboarding or main_step_011,100,0,100
+11,Onboarding or main_step_012,100,0,100
+12,Onboarding or main_step_015,100,0,100
+13,Onboarding or main_step_016,100,0,100
+14,Onboarding or main_step_017,100,0,100
+15,Onboarding or main_step_018,100,0,100
+16,Onboarding or main_step_019,100,0,100
+17,Onboarding or main_step_020,100,0,100
+18,Onboarding or main_step_022,100,0,100
+19,Onboarding or main_step_023,100,0,100
+20,Onboarding or main_step_024,100,0,100
+21,Onboarding or main_step_025,100,0,100
+22,Onboarding or main_step_026,100,0,100
+23,Onboarding or main_step_030,100,0,100
+24,Onboarding or main_step_032,100,0,100
+25,Onboarding or main_step_036,100,0,100
+26,Onboarding or main_step_039,100,0,100
+27,Onboarding or main_step_040,100,0,100
+28,Onboarding or main_step_041,100,0,100
+29,Onboarding or main_step_043,100,0,100
+30,Onboarding or main_step_042,100,0,100
+31,Onboarding or main_step_044,100,0,100
+32,Onboarding or main_step_051,100,0,100
+33,Onboarding or main_step_052,100,0,100
+34,Onboarding or main_step_046,100,0,100
+35,Onboarding or main_step_049,100,0,100
+36,Onboarding or main_step_050,100,0,100
+37,Onboarding or main_step_054,100,0,100
+38,Onboarding or main_step_055,100,0,100
+39,Onboarding or main_step_056,100,0,100
+40,Onboarding or main_step_060,100,0,100
+41,Onboarding or main_step_062,100,0,100
+42,Onboarding or main_step_065,100,0,100
+43,Onboarding or main_step_067,100,0,100
+44,Onboarding or main_step_068,100,0,100
+45,Onboarding or main_step_069,100,0,100
+46,Onboarding or main_step_070,100,0,100
+47,Onboarding or main_step_071,100,0,100
+48,Onboarding or main_step_072,100,0,100
+49,Onboarding or main_step_074,100,0,100
+50,Onboarding or main_step_075,100,0,100
+51,Onboarding or main_step_076,100,0,100
+52,Onboarding or main_step_077,100,0,100
+53,Onboarding or main_step_079,100,0,100
+54,Onboarding or main_step_080,100,0,100
+55,Onboarding or main_step_081,100,0,100
+56,Onboarding or main_step_083,100,0,100
+57,Onboarding or main_step_084,100,0,100
+58,Onboarding or main_step_085,100,0,100
+59,Onboarding or main_step_086,100,0,100
+60,Onboarding or main_step_088,100,0,100
+61,Onboarding or main_step_090,100,0,100
+62,Onboarding or main_step_091,100,0,100
+63,Onboarding or main_step_092,100,0,100
+64,Onboarding or main_step_095,100,0,100
+65,Onboarding or main_step_096,100,0,100
+66,Onboarding or main_step_097,100,0,100
+67,Onboarding or main_step_099,100,0,100
+68,Onboarding or main_step_100,100,0,100
+69,Onboarding or main_step_101,100,0,100
+70,Onboarding or main_step_102,100,0,100
+71,Onboarding or main_step_103,100,0,100
+72,Onboarding or main_step_104,100,0,100
+73,Onboarding or main_step_105,83.33,16.67,83.33
+74,Onboarding or main_step_106,80,20,66.67
+75,Onboarding or main_step_108,75,25,50
+76,Onboarding or main_step_109,100,0,50
+77,Onboarding or main_step_110,100,0,50
+78,Onboarding or main_step_111,66.67,33.33,33.33
+79,Onboarding or main_step_112,50,50,16.67
+80,Onboarding or main_step_113,100,0,16.67
+81,Onboarding or main_step_114,100,0,16.67
+82,Onboarding or main_step_029,0,100,0
+83,Onboarding or main_step_003,0,0,0
+84,Onboarding or main_step_027,0,0,0
+85,Onboarding or main_step_028,0,0,0
+86,Onboarding or main_step_013,0,0,0
+87,Onboarding or main_step_014,0,0,0
+88,Onboarding or main_step_021,0,0,0
+89,Onboarding or main_step_031,0,0,0
+90,Onboarding or main_step_033,0,0,0
+91,Onboarding or main_step_034,0,0,0
+92,Onboarding or main_step_035,0,0,0
+93,Onboarding or main_step_037,0,0,0
+94,Onboarding or main_step_038,0,0,0
+95,Onboarding or main_step_057,0,0,0
+96,Onboarding or main_step_058,0,0,0
+97,Onboarding or main_step_059,0,0,0
+98,Onboarding or main_step_064,0,0,0
+99,Onboarding or main_step_045,0,0,0
+100,Onboarding or main_step_053,0,0,0
+` },
+];
 
 // ---------- theme ----------
 const themeBtn=document.getElementById('themeBtn');
@@ -173,16 +721,102 @@ themeBtn.onclick=()=>{
 };
 
 // ---------- helpers ----------
-const S=DATA.steps, START=DATA.start, FINAL=DATA.final;
-const cpSet=new Set(DATA.checkpoints);
 const pct=v=>v.toFixed(1).replace(/\.0$/,'')+'%';
+const numCmp=(a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true});
 function sevClass(r){ if(r>=20) return 'b-crit'; if(r>=8) return 'b-ser'; if(r>0) return 'b-warn'; return 'b-zero'; }
 function sevLabel(r){ if(r>=20) return '심각'; if(r>=8) return '높음'; if(r>0) return '주의'; return '—'; }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function niceStep(x){ if(!(x>0)) return 1;
+  const p=Math.pow(10,Math.floor(Math.log10(x))), n=x/p;
+  const m = n<=1?1 : n<=2?2 : n<=2.5?2.5 : n<=3?3 : n<=5?5 : 10;
+  return m*p; }
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
-// ---------- KPI ----------
-document.getElementById('kpis').innerHTML=`
-  <div class="tile"><div class="label">시작 유저</div><div class="value">${START}<span class="unit">명</span></div><div class="note">step 001 완료 기준</div></div>
-  <div class="tile"><div class="label">온보딩 완료 (step 114)</div><div class="value">${FINAL}<span class="unit">명</span></div><div class="note">완주율 ${pct(FINAL/START*100)}</div></div>`;
+// ---------- CSV ----------
+function parseCSV(text){
+  const lines=text.replace(/^﻿/,'').trim().split(/\r?\n/);
+  const head=lines[0].split(',').map(s=>s.trim());
+  const iDet=head.indexOf('Step details'), iComp=head.indexOf('Step completion'), iTot=head.indexOf('Total completion');
+  if(iDet<0||iComp<0||iTot<0) throw new Error('CSV 헤더에 Step details / Step completion / Total completion 이 필요합니다.');
+  const rows=lines.slice(1).filter(l=>l.trim()).map(l=>{
+    const c=l.split(',');
+    const md=/main_step_(\w+)/.exec(c[iDet]||'');
+    return { num: md?md[1]:(c[iDet]||'').trim(), comp:parseFloat(c[iComp]), total:parseFloat(c[iTot]) };
+  });
+  if(!rows.length) throw new Error('데이터 행이 없습니다.');
+  return rows;
+}
+function inferStart(rows){
+  const totals=rows.map(r=>r.total).filter(t=>t>0);
+  if(!totals.length) return 0;
+  for(let N=2;N<=5000;N++){
+    let ok=true;
+    for(const t of totals){ const v=t*N/100; if(Math.abs(v-Math.round(v))>0.055){ ok=false; break; } }
+    if(ok) return N;
+  }
+  return 100;
+}
+// CSV 한 장 -> {start, seq:[{num,comp,excl}]} (원본 순서 유지)
+function toDataset(rows,startOverride){
+  const start=startOverride||inferStart(rows);
+  const seq=rows.map(r=>({num:r.num, comp:Math.round(r.total*start/100), excl:(r.comp===0&&r.total===0)}));
+  return {start, seq};
+}
+
+// 여러 날짜 데이터셋 합산 -> 리포트용 DATA
+function combine(dsets){
+  const START=dsets.reduce((a,d)=>a+d.start,0);
+  const order=[], comp=new Map(), churn=new Map(), flagged=new Set();
+  dsets.forEach(d=>{
+    let prev=d.start;
+    d.seq.forEach(s=>{
+      if(!comp.has(s.num)){ comp.set(s.num,0); order.push(s.num); }
+      comp.set(s.num, comp.get(s.num)+s.comp);
+      if(Object.prototype.hasOwnProperty.call(CONFIG.reason,s.num)){
+        flagged.add(s.num); churn.set(s.num,(churn.get(s.num)||0)+Math.max(prev-s.comp,0));
+      }
+      prev=s.comp;
+    });
+  });
+  const isExcl=n=>flagged.has(n)&&comp.get(n)===0;
+
+  // GA는 마지막 스텝(예: 114) 뒤에 놓인 미발화 스텝에 완주자를 '이탈'로 흡수시킨다.
+  // 이들은 온보딩 완료자이므로 이탈로 계상하지 않고 ghost 로만 보관한다.
+  const excluded=order.filter(isExcl).sort(numCmp).map(n=>({
+    num:n, desc:CONFIG.desc[n]||('main_step_'+n), reason:CONFIG.reason[n]||'미발화',
+    comp:0, churn:0, ghost:churn.get(n)||0 }));
+
+  const usedOrder=order.filter(n=>!isExcl(n));
+  const wins=[];
+  for(let i=0;i<usedOrder.length-1;i++){
+    if(numCmp(usedOrder[i],usedOrder[i+1])>0){
+      const last=wins[wins.length-1];
+      if(last && i<=last[1]) last[1]=i+1; else wins.push([i,i+1]);
+    }
+  }
+  const reorderedNums=wins.map(([a,b])=>{
+    const g=usedOrder.slice(a,b+1).slice().sort(numCmp);
+    return g[0]===g[g.length-1]?g[0]:g[0]+'~'+g[g.length-1];
+  });
+
+  const steps=[]; let enter=START;
+  usedOrder.slice().sort(numCmp).forEach((n,i)=>{
+    const c=comp.get(n), ch=enter-c;
+    steps.push({i:i+1, num:n, desc:CONFIG.desc[n]||('main_step_'+n),
+                enter, comp:c, churn:ch, rate:enter?Math.round(ch/enter*1000)/10:0});
+    enter=c;
+  });
+  const lastReal=steps.length?steps[steps.length-1]:null;
+  // 마지막 스텝을 완료한 대상 = 온보딩 완료. 별도 스텝으로 한 칸 더 표기한다.
+  const T=CONFIG.terminalStep;
+  if(T && lastReal){
+    steps.push({i:steps.length+1, num:T.num, desc:T.desc, terminal:true,
+                enter:lastReal.comp, comp:lastReal.comp, churn:0, rate:0});
+  }
+  return {start:START, final:lastReal?lastReal.comp:0, lastRealNum:lastReal?lastReal.num:'—', steps, excluded,
+          checkpoints:CONFIG.checkpoints, reordered:wins.length>0, reorderedNums,
+          totalChurn:steps.reduce((a,s)=>a+s.churn,0)};
+}
 
 // ---------- tooltip ----------
 const tt=document.getElementById('tt');
@@ -194,35 +828,46 @@ function moveTT(ev){
   tt.style.left=x+'px'; tt.style.top=y+'px';
 }
 function hideTT(){ tt.style.opacity=0; }
-function stepTT(s){
-  return `<b>step ${s.num}</b> · ${s.desc}<br>
-  <span class="tt-muted">진입</span> ${s.enter}명 → <span class="tt-muted">완료</span> ${s.comp}명<br>
-  <span class="tt-muted">이탈</span> ${s.churn}명 (${pct(s.rate)})${cpSet.has(s.num)?'<br><span class="tt-muted">◆ 체크포인트 스텝</span>':''}`;
+function bindHelp(){
+  document.querySelectorAll('.help').forEach(el=>{
+    if(el._b) return; el._b=1;
+    el.addEventListener('mousemove',ev=>showTT(ev,el.dataset.tip));
+    el.addEventListener('mouseleave',hideTT);
+    el.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();});
+  });
 }
 
-document.querySelectorAll('.help').forEach(el=>{
-  el.addEventListener('mousemove',ev=>showTT(ev,el.dataset.tip));
-  el.addEventListener('mouseleave',hideTT);
-  el.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();});
-});
-
-// ---------- charts (responsive) ----------
-const N=S.length, GAP=2, PAD_L=34, PAD_R=10, MIN_BW=6, MAX_BW=22;
+// ---------- charts ----------
+const GAP=2, PAD_L=34, PAD_R=10, MIN_BW=6, MAX_BW=22;
 const NS='http://www.w3.org/2000/svg';
 function el(n,attrs){const e=document.createElementNS(NS,n);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
-function attach(hit,s){
-  hit.addEventListener('mousemove',ev=>{showTT(ev,stepTT(s));});
-  hit.addEventListener('mouseleave',hideTT);
-}
 function barPath(x,BW,base,bh){
   const top=base-bh, rr=Math.min(3,bh,BW/2);
   return `M${x},${base} V${top+rr} Q${x},${top} ${x+rr},${top} H${x+BW-rr} Q${x+BW},${top} ${x+BW},${top+rr} V${base} Z`;
 }
+let D=null, cpSet=new Set(), lastBW=null;
+function stepTT(s){
+  if(s.terminal) return `<b>step ${s.num}</b> · ${esc(s.desc)}<br>
+  <span class="tt-muted">직전 스텝 완료</span> ${s.comp}명 = <b>온보딩 완주</b>`;
+  return `<b>step ${s.num}</b> · ${esc(s.desc)}<br>
+  <span class="tt-muted">진입</span> ${s.enter}명 → <span class="tt-muted">완료</span> ${s.comp}명<br>
+  <span class="tt-muted">이탈</span> ${s.churn}명 (${pct(s.rate)})${cpSet.has(s.num)?'<br><span class="tt-muted">◆ 체크포인트 스텝</span>':''}`;
+}
+function attach(hit,s){
+  hit.addEventListener('mousemove',ev=>{showTT(ev,stepTT(s));});
+  hit.addEventListener('mouseleave',hideTT);
+}
+function ticksFor(max,want,minStep){
+  const st=Math.max(minStep||0,niceStep(max/want)), out=[];
+  for(let v=0; v<=max+1e-9; v+=st) out.push(Math.round(v*100)/100);
+  return out;
+}
 function drawMain(W,BW){
+  const S=D.steps, START=D.start;
   const H=230, PT=18, PB=26, plotH=H-PT-PB;
   const svg=el('svg',{width:W,height:H});
   const y=v=>PT+plotH*(1-v/START);
-  [0,30,60,90].forEach(v=>{
+  ticksFor(START,3,1).forEach(v=>{
     svg.appendChild(el('line',{x1:PAD_L,x2:W-PAD_R,y1:y(v),y2:y(v),
       stroke:v===0?'var(--baseline)':'var(--grid)','stroke-width':1}));
     const t=el('text',{x:PAD_L-6,y:y(v)+3.5,'text-anchor':'end',class:'axis-t'});
@@ -243,7 +888,7 @@ function drawMain(W,BW){
       const l=el('text',{x:x+BW/2,y:H-3,'text-anchor':'middle',class:'axis-t'});
       l.textContent=s.num; svg.appendChild(l);
     }
-    if(i===0||i===N-1){
+    if(i===0||i===S.length-1){
       const d=el('text',{x:x+BW/2,y:base-bh-5,'text-anchor':'middle',class:'dlabel'});
       d.textContent=s.comp; svg.appendChild(d);
     }
@@ -251,10 +896,13 @@ function drawMain(W,BW){
   return svg;
 }
 function drawChurn(W,BW){
-  const H=96, PT=14, PB=6, plotH=H-PT-PB, MAX=40;
+  const S=D.steps;
+  const H=96, PT=14, PB=6, plotH=H-PT-PB;
+  const peak=Math.max(10,...S.map(s=>s.rate));
+  const st=niceStep(peak/2), MAX=Math.ceil(peak/st)*st;
   const svg=el('svg',{width:W,height:H});
   const y=v=>PT+plotH*(1-v/MAX);
-  [0,20,40].forEach(v=>{
+  ticksFor(MAX,2).forEach(v=>{
     svg.appendChild(el('line',{x1:PAD_L,x2:W-PAD_R,y1:y(v),y2:y(v),
       stroke:v===0?'var(--baseline)':'var(--grid)','stroke-width':1}));
     const t=el('text',{x:PAD_L-6,y:y(v)+3.5,'text-anchor':'end',class:'axis-t'});
@@ -275,12 +923,21 @@ function drawChurn(W,BW){
   });
   return svg;
 }
-let lastBW=null;
+let retryN=0, retryQ=false;
+function scheduleRetry(){
+  if(retryQ || retryN++>120) return;
+  retryQ=true;
+  requestAnimationFrame(()=>{ retryQ=false; renderCharts(true); });
+}
 function renderCharts(force){
+  if(!D) return;
   const mainHost=document.getElementById('mainChart');
   const churnHost=document.getElementById('churnChart');
-  const avail=mainHost.parentElement.clientWidth||mainHost.clientWidth;
-  if(!avail) return;
+  const avail=mainHost.parentElement.clientWidth||mainHost.clientWidth
+              ||mainHost.getBoundingClientRect().width;
+  if(!avail){ scheduleRetry(); return; }
+  retryN=0;
+  const N=D.steps.length; if(!N) return;
   let BW=(avail-PAD_L-PAD_R)/N-GAP;
   BW=Math.min(MAX_BW,Math.max(MIN_BW,BW));
   BW=Math.round(BW*100)/100;
@@ -290,52 +947,141 @@ function renderCharts(force){
   mainHost.innerHTML=''; mainHost.appendChild(drawMain(W,BW));
   churnHost.innerHTML=''; churnHost.appendChild(drawChurn(W,BW));
 }
-renderCharts(true);
 let rzT; addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(()=>renderCharts(false),120);});
+addEventListener('load',()=>renderCharts(false));
+addEventListener('pageshow',()=>renderCharts(false));
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>renderCharts(false));
+if(window.ResizeObserver){
+  const ro=new ResizeObserver(()=>renderCharts(false));
+  ro.observe(document.getElementById('mainChart').parentElement);
+}
 
-document.getElementById('chartInsight').innerHTML=
-  `<b>요약:</b> 90명이 온보딩을 시작해 <b>11명(12.2%)</b>이 마지막 스텝(114)까지 도달했습니다. 초·중반(001~099)은 스텝당 이탈이 0~2명 수준으로 완만하지만, <b>step 100 이후 후반 구간에서 이탈이 급격히 가속</b>됩니다. 특히 <b>step 106 (제작기구 - 망치)</b>은 진입 28명 중 10명이 이탈(35.7%)한 단일 최대 병목입니다.`;
+// ---------- render ----------
+function render(data, period, srcLabel){
+  D=data; cpSet=new Set(D.checkpoints); lastBW=null;
+  const S=D.steps, START=D.start, FINAL=D.final;
+  const NREAL=S.filter(s=>!s.terminal).length;
 
-// ---------- top table ----------
-const top10=[...S].sort((a,b)=>b.churn-a.churn||b.rate-a.rate).slice(0,10);
-const maxRate=Math.max(...top10.map(s=>s.rate));
-document.getElementById('topTable').innerHTML=
- `<thead><tr><th>#</th><th>스텝</th><th>설명</th><th class="num">진입</th><th class="num">완료</th><th class="num">이탈</th><th class="num">이탈율</th><th style="width:120px"></th><th>수준</th></tr></thead><tbody>`+
- top10.map((s,i)=>`<tr${i===0?' class="hl"':''}>
-   <td class="num">${i+1}</td>
-   <td class="stepcode">step ${s.num}${cpSet.has(s.num)?' ◆':''}</td>
-   <td>${s.desc}</td>
-   <td class="num">${s.enter}</td><td class="num">${s.comp}</td>
-   <td class="num"><b>${s.churn}</b></td><td class="num">${pct(s.rate)}</td>
-   <td><span class="ratebar" style="width:${Math.round(s.rate/maxRate*110)}px"></span></td>
-   <td><span class="badge ${sevClass(s.rate)}">${sevLabel(s.rate)}</span></td>
- </tr>`).join('')+`</tbody>`;
+  document.getElementById('h1tip').dataset.tip =
+    `기준일 ${period} · GA 퍼널 데이터 · 시작 유저 ${START}명 · 사용 스텝 ${NREAL}종 (전체 ${CONFIG.totalStepCount}종 중, 설계 기준)`;
+  document.getElementById('fullTip').dataset.tip =
+    `사용 스텝 ${NREAL}종의 설명과 수치를 한눈에 볼 수 있는 표입니다. 파란 막대는 잔존 유저 수(시작 ${START}명 대비), 주황 막대는 해당 스텝 이탈율입니다. ◆는 체크포인트 스텝입니다.`;
+  document.getElementById('srcMeta').textContent = srcLabel? `${period} · ${srcLabel}` : period;
 
-document.getElementById('topInsight').innerHTML=
-  `<b>패턴:</b> 상위 10개 중 8개가 <b>step 086 이후 후반부</b>(도끼·망치 컨텐츠, 직원 고용 구간)에 몰려 있습니다. 반복 구조인 "제작기구 건설(086 도끼 6.9% → 106 망치 35.7%)"과 "직원 고용" 계열(071·100·101·109 등)에서 이탈이 반복 발생하고 있어, 후반 반복 루프의 동기 부여(보상·목표 제시)를 점검할 필요가 있습니다. 단, 후반 스텝은 아직 진행 중인 유저가 이탈로 집계됐을 가능성도 있습니다.`;
+  document.getElementById('kpis').innerHTML=`
+  <div class="tile"><div class="label">시작 유저</div><div class="value">${START}<span class="unit">명</span></div></div>
+  <div class="tile"><div class="label">온보딩 완료 (step ${D.lastRealNum} 완료)</div><div class="value">${FINAL}<span class="unit">명</span></div><div class="note">완주율 ${pct(START?FINAL/START*100:0)}</div></div>`;
 
-// ---------- full table (descriptions + inline graphs) ----------
-document.getElementById('fullTable').innerHTML=
- `<thead><tr><th class="num">순서</th><th>스텝</th><th>설명</th><th class="num">진입</th><th style="width:170px">완료(잔존) 유저</th><th class="num">이탈</th><th class="num">이탈율</th></tr></thead><tbody>`+
- S.map(s=>`<tr${s.rate>=20?' class="hl"':''}>
-   <td class="num" style="color:var(--muted)">${s.i}</td>
-   <td class="stepcode">step ${s.num}${cpSet.has(s.num)?' ◆':''}</td>
-   <td>${s.desc}</td>
-   <td class="num">${s.enter}</td>
-   <td style="white-space:nowrap"><span class="rowbar" style="width:${(s.comp/START*120).toFixed(1)}px"></span><span class="rowval">${s.comp}</span></td>
-   <td class="num">${s.churn>0?`<span class="badge ${sevClass(s.rate)}">${s.churn}</span>`:'<span style="color:var(--muted)">0</span>'}</td>
-   <td class="num">${s.churn>0?pct(s.rate):'<span style="color:var(--muted)">—</span>'}</td>
- </tr>`).join('')+`</tbody>`;
+  document.getElementById('loadErr').hidden=true;
+  document.getElementById('report').hidden=false;   // 폭 계산을 위해 차트보다 먼저 노출
+  renderCharts(true);
 
-// ---------- excluded table ----------
-document.getElementById('exclTable').innerHTML=
- `<thead><tr><th>스텝</th><th>설명</th><th>제외 사유</th><th class="num">완료</th><th class="num">이탈</th></tr></thead><tbody>`+
- DATA.excluded.map(e=>`<tr${e.churn>0?' class="hl"':''}>
-   <td class="stepcode">step ${e.num}</td>
-   <td>${e.desc}</td>
-   <td><span class="pill">${e.reason}</span></td>
-   <td class="num">${e.comp}</td><td class="num">${e.churn}</td>
- </tr>`).join('')+`</tbody>`;
+  const top10=S.filter(s=>!s.terminal).sort((a,b)=>b.churn-a.churn||b.rate-a.rate).slice(0,10);
+  const maxRate=Math.max(...top10.map(s=>s.rate),0.1);
+  document.getElementById('topTable').innerHTML=
+   `<thead><tr><th>#</th><th>스텝</th><th>설명</th><th class="num">진입</th><th class="num">완료</th><th class="num">이탈</th><th class="num">이탈율</th><th style="width:120px"></th><th>수준</th></tr></thead><tbody>`+
+   top10.map((s,i)=>`<tr${i===0?' class="hl"':''}>
+     <td class="num">${i+1}</td>
+     <td class="stepcode">step ${s.num}${cpSet.has(s.num)?' ◆':''}</td>
+     <td>${esc(s.desc)}</td>
+     <td class="num">${s.enter}</td><td class="num">${s.comp}</td>
+     <td class="num"><b>${s.churn}</b></td><td class="num">${pct(s.rate)}</td>
+     <td><span class="ratebar" style="width:${Math.round(s.rate/maxRate*110)}px"></span></td>
+     <td><span class="badge ${sevClass(s.rate)}">${sevLabel(s.rate)}</span></td>
+   </tr>`).join('')+`</tbody>`;
+
+  document.getElementById('fullTable').innerHTML=
+   `<thead><tr><th class="num">순서</th><th>스텝</th><th>설명</th><th class="num">진입</th><th style="width:170px">완료(잔존) 유저</th><th class="num">이탈</th><th class="num">이탈율</th></tr></thead><tbody>`+
+   S.map(s=>`<tr${!s.terminal&&s.rate>=20?' class="hl"':''}>
+     <td class="num" style="color:var(--muted)">${s.i}</td>
+     <td class="stepcode">step ${s.num}${cpSet.has(s.num)?' ◆':''}</td>
+     <td>${esc(s.desc)}</td>
+     <td class="num">${s.enter}</td>
+     <td style="white-space:nowrap"><span class="rowbar" style="width:${(s.comp/START*120).toFixed(1)}px"></span><span class="rowval">${s.comp}</span></td>
+     <td class="num">${s.terminal?'<span style="color:var(--muted)">—</span>':(s.churn>0?`<span class="badge ${sevClass(s.rate)}">${s.churn}</span>`:'<span style="color:var(--muted)">0</span>')}</td>
+     <td class="num">${s.terminal?'<span style="color:var(--muted)">—</span>':(s.churn>0?pct(s.rate):'<span style="color:var(--muted)">—</span>')}</td>
+   </tr>`).join('')+`</tbody>`;
+
+  const EX=D.excluded;
+  document.getElementById('exclSummary').innerHTML=
+   `퍼널 분석에 포함되지 않는 스텝 (${EX.length}종)<span class="help" data-tip="GA 퍼널 정의에는 포함되어 있으나 이벤트가 발화하지 않아(설계상 제외 스텝) 분석에서 제외한 ${EX.length}종입니다. 제외 사유는 퍼널 이벤트 설계안 기준입니다.">?</span>`;
+  document.getElementById('exclTable').innerHTML=
+   `<thead><tr><th>스텝</th><th>설명</th><th>제외 사유</th><th class="num">완료</th><th class="num">이탈</th></tr></thead><tbody>`+
+   EX.map(e=>`<tr>
+     <td class="stepcode">step ${e.num}</td>
+     <td>${esc(e.desc)}</td>
+     <td><span class="pill">${esc(e.reason)}</span></td>
+     <td class="num">${e.comp}</td>
+     <td class="num"><span style="color:var(--muted)">${e.churn}</span></td>
+   </tr>`).join('')+`</tbody>`;
+
+  bindHelp();
+}
+
+// ---------- date filter ----------
+const SOURCES=[];        // {key, label, dataset, adhoc}
+let selected=new Set();
+
+function periodLabel(recs){
+  const fr=recs.map(r=>r.from).filter(Boolean).sort()[0];
+  const to=recs.map(r=>r.to).filter(Boolean).sort().pop();
+  if(!fr||!to) return recs.map(r=>r.label).join(', ');
+  const base = fr===to? fr : `${fr} ~ ${to}`;
+  return recs.length>1? `${base} (${recs.length}일)` : base;
+}
+function apply(){
+  const picked=SOURCES.filter(s=>selected.has(s.key));
+  if(!picked.length){ fail('선택된 날짜가 없습니다.'); return; }
+  try{
+    render(combine(picked.map(s=>s.dataset)), periodLabel(picked),
+           picked.length===1? '' : `${picked.length}개 날짜 합산`);
+  }catch(e){ fail(e.message); }
+  drawBar();
+}
+function drawBar(){
+  const bar=document.getElementById('datebar');
+  if(SOURCES.length<=1){ bar.hidden=true; return; }
+  bar.hidden=false;
+  const list=[...SOURCES].sort((a,b)=>a.key.localeCompare(b.key));
+  bar.innerHTML=
+    `<span class="dblabel">날짜</span>`+
+    list.map(s=>`<button class="chip${selected.has(s.key)?' on':''}" data-k="${esc(s.key)}">${esc(s.label)}<span class="n">${s.dataset.start}명</span></button>`).join('')+
+    `<span class="dbsep"></span>`+
+    `<button class="chip q" data-q="all">전체</button>`;
+  bar.querySelectorAll('.chip[data-k]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.k;
+    if(selected.has(k)){ if(selected.size>1) selected.delete(k); } else selected.add(k);
+    apply();
+  });
+  bar.querySelectorAll('.chip[data-q]').forEach(b=>b.onclick=()=>{
+    selected=new Set(SOURCES.map(s=>s.key)); apply();
+  });
+}
+function addSource(spec,rows){
+  SOURCES.push({key:spec.key, label:spec.label||spec.key, from:spec.from, to:spec.to,
+                dataset:toDataset(rows,spec.start)});
+}
+function fail(msg){
+  const e=document.getElementById('loadErr');
+  e.hidden=false; e.innerHTML=`<b>데이터를 표시하지 못했습니다.</b> ${esc(msg)}`;
+  document.getElementById('srcMeta').textContent='데이터 없음';
+  document.getElementById('report').hidden=true;
+}
+
+// ---------- 부트 ----------
+(function(){
+  document.getElementById('tags').innerHTML=(CONFIG.tags||[]).map(t=>`<span class="pill">${esc(t)}</span>`).join('');
+  DATASETS.forEach(d=>{
+    try{ addSource(d, parseCSV(d.text)); }
+    catch(e){ console.warn('데이터셋 파싱 실패:', d.key, e.message); }
+  });
+  if(!SOURCES.length){ fail('DATASETS 가 비어 있거나 형식이 올바르지 않습니다.'); return; }
+  const want=(new URLSearchParams(location.search).get('dates')||'').split(',').map(v=>v.trim()).filter(Boolean);
+  const valid=want.filter(k=>SOURCES.some(s=>s.key===k));
+  selected=new Set(valid.length?valid:SOURCES.map(s=>s.key));
+  apply();
+})();
+bindHelp();
 </script>
 </body>
 </html>
