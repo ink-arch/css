@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=688">
 <title>가이드퀘스트 A·B 대조표</title>
 <style>
 :root{--bg:#fff;--sf:#fbfcfc;--sf2:#eef1f3;--ink:#14181d;--ink2:#39424b;--mut:#6a747d;
@@ -12,59 +12,52 @@
 --ink2:#c1c9d0;--mut:#8b959e;--fnt:#68727b;--ln:#272e35;--ln2:#353e46;
 --pat:#5cbdb3;--patbg:#14262a;--patln:#2b5658;--brz:#d39d57;--brzbg:#281f15;--brzln:#574325;--emb:#e0714f}}
 *{box-sizing:border-box;margin:0;padding:0}
-/* 단일 세로 열. 고정 최소 너비를 두지 않아 노션 임베드 폭(약 700px)에
-   그대로 꽉 차고, 더 좁아져도 가로로 잘리지 않는다. */
+/* 폭 688px 고정 · 대응형 없음. 세로는 행 높이를 최소로 눌러 줄인다.
+   thead만 스티키(top:0) — 헤더 높이에 오프셋을 묶지 않아 어긋날 여지가 없다. */
 html{background:var(--bg)}
-body{background:var(--bg);color:var(--ink);font-size:10.5px;line-height:1.35;
+body{background:var(--bg);color:var(--ink);font-size:9.5px;line-height:1.2;
 font-family:-apple-system,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",system-ui,sans-serif;
--webkit-font-smoothing:antialiased;padding:10px 12px 14px;overflow-x:hidden}
-header{position:sticky;top:0;z-index:30;background:var(--bg);
-display:flex;align-items:baseline;gap:5px 12px;flex-wrap:wrap;
-padding:2px 0 7px;margin:-2px 0 0}
-h1{font-size:14px;font-weight:600;letter-spacing:-.01em}
-.lg{display:flex;gap:3px 10px;flex-wrap:wrap;color:var(--mut);font-size:9px;align-items:center}
+-webkit-font-smoothing:antialiased;width:688px;padding:6px 0 8px}
+header{display:flex;align-items:baseline;gap:2px 10px;flex-wrap:wrap;margin:0 0 5px}
+h1{font-size:12px;font-weight:600;letter-spacing:-.01em}
+.lg{display:flex;gap:2px 8px;flex-wrap:wrap;color:var(--mut);font-size:8px;align-items:center}
 .lg i,.q i,.t{font-style:normal}
 .lg em{font-style:normal;color:var(--fnt)}
-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;
+table{width:688px;border-collapse:separate;border-spacing:0;table-layout:fixed;
 border:1px solid var(--ln);border-radius:3px}
-col.cs{width:26px}col.co{width:28%}col.ca{width:29%}col.cb{width:auto}
-th{position:sticky;top:29px;z-index:20;background:var(--sf2);color:var(--ink);text-align:left;
-font-weight:600;font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:4px 6px;
+col.cs{width:24px}col.co{width:196px}col.ca{width:198px}col.cb{width:auto}
+th{position:sticky;top:0;z-index:20;background:var(--sf2);color:var(--ink);text-align:left;
+font-weight:600;font-size:8px;letter-spacing:.06em;text-transform:uppercase;padding:3px 5px;
 border-bottom:1px solid var(--ln2);box-shadow:0 1px 0 var(--ln2);white-space:nowrap}
-th.s{text-align:right;padding-right:4px}
-td{padding:1.5px 6px;border-bottom:1px solid var(--ln);vertical-align:top}
+th.s{text-align:right;padding-right:3px}
+td{padding:0 5px;border-bottom:1px solid var(--ln);vertical-align:top}
 tbody tr:last-child td{border-bottom:0}
-td.s{text-align:right;padding-right:4px;color:var(--fnt);font-variant-numeric:tabular-nums;
-font-size:9px}
+td.s{text-align:right;padding-right:3px;color:var(--fnt);font-variant-numeric:tabular-nums;
+font-size:8px}
 td.o{color:var(--ink2);word-break:keep-all}
 td.a{border-left:1px solid var(--ln);background:var(--patbg)}
 td.b{border-left:1px solid var(--ln);background:var(--brzbg)}
 tr.ph td{background:var(--sf2);border-top:1px solid var(--ln2);border-bottom:1px solid var(--ln2);
-padding:2px 6px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);
+padding:1px 5px;font-size:8px;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);
 font-weight:600}
 tr.ph i{font-style:normal;color:var(--fnt);letter-spacing:0;text-transform:none;
-font-weight:400;margin-left:6px}
+font-weight:400;margin-left:5px}
 tr.v td.s{color:var(--pat)}
-.t{display:inline-block;font-size:8.5px;font-weight:700;letter-spacing:.03em;padding:0 3px;
+.t{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.03em;padding:0 2px;
 border-radius:2px;border:1px solid var(--ln2);color:var(--mut);background:var(--sf);
-margin-right:4px;white-space:nowrap}
+margin-right:3px;white-space:nowrap}
 .t.lv{color:var(--emb);border-color:var(--emb)}
 .t.end{color:var(--ink);border-color:var(--ink)}
 .q{display:block;word-break:keep-all}
-.q b{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:8.5px;font-weight:400;
-font-variant-numeric:tabular-nums;margin-right:4px}
+.q b{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:8px;font-weight:400;
+font-variant-numeric:tabular-nums;margin-right:3px}
 td.a .q b{color:var(--pat)}td.b .q b{color:var(--brz)}
-.q i,.k{display:inline-block;font-size:8px;font-weight:700;padding:0 3px;margin-left:3px;
+.q i,.k{display:inline-block;font-size:7.5px;font-weight:700;padding:0 2px;margin-left:2px;
 border-radius:2px;border:1px solid;position:relative;top:-1px;white-space:nowrap}
 .m,.k.m{color:var(--pat);border-color:var(--patln);background:var(--patbg)}
 .u,.k.u{color:var(--brz);border-color:var(--brzln);background:var(--brzbg)}
 td.d,.d{color:var(--fnt)}
-footer{margin-top:8px;color:var(--fnt);font-size:9px}
-@media (max-width:520px){
-  col.cs{width:22px}col.co{width:30%}col.ca{width:30%}
-  body{font-size:10px;padding:8px 8px 12px}
-  td,tr.ph td{padding-left:4px;padding-right:4px}
-}
+footer{margin-top:5px;color:var(--fnt);font-size:8px}
 </style>
 </head>
 <body>
