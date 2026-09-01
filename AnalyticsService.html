@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ForgeFortune 애널리틱스 키</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#EDF0EC; --surface:#FFFFFF;
+  --ink:#121716; --ink-2:#39433F; --muted:#64706C;
+  --rule:#D7DDD6; --rule-soft:#E3E8E1;
+  --patina:#0E6A5B; --patina-wash:#0E6A5B14;
+  --slate:#4E6788; --slate-wash:#4E678814;
+  --pending:#9A6B18; --alarm:#A33B22;
+  --chip:#DFE5DE; --band:#E6EAE4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1413; --surface:#161C1A;
+    --ink:#DEE5E1; --ink-2:#B4BFBA; --muted:#85918C;
+    --rule:#232B28; --rule-soft:#1D2422;
+    --patina:#4CB9A0; --patina-wash:#4CB9A01F;
+    --slate:#8CA8CB; --slate-wash:#8CA8CB1F;
+    --pending:#D6A64B; --alarm:#E08163;
+    --chip:#202926; --band:#1B2220;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1413; --surface:#161C1A;
+  --ink:#DEE5E1; --ink-2:#B4BFBA; --muted:#85918C;
+  --rule:#232B28; --rule-soft:#1D2422;
+  --patina:#4CB9A0; --patina-wash:#4CB9A01F;
+  --slate:#8CA8CB; --slate-wash:#8CA8CB1F;
+  --pending:#D6A64B; --alarm:#E08163;
+  --chip:#202926; --band:#1B2220;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+  font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:36px 22px 64px;display:flex;flex-direction:column;gap:30px}
+
+.mast{display:flex;flex-direction:column;gap:11px}
+h1{margin:0;font-size:32px;font-weight:700;letter-spacing:-.022em;line-height:1.08;text-wrap:balance}
+.lede{margin:0;color:var(--ink-2);font-size:14px;text-wrap:nowrap}
+@media (max-width:900px){.lede{text-wrap:wrap}}
+.strip{display:flex;flex-wrap:wrap;border:1px solid var(--rule);border-radius:3px;
+  background:var(--surface);overflow:hidden;margin-top:2px}
+.stat{flex:1 1 140px;padding:10px 13px;border-right:1px solid var(--rule-soft);
+  display:flex;flex-direction:column;gap:1px}
+.stat:last-child{border-right:0}
+.stat b{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.stat.warn b{color:var(--alarm)}
+.stat span{font-size:11px;color:var(--muted)}
+
+section{display:flex;flex-direction:column;gap:9px}
+.sh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  border-bottom:2px solid var(--ink);padding-bottom:5px}
+.sh h2{margin:0;font-size:16px;font-weight:700;letter-spacing:-.012em}
+.sh .n{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend{margin:0;font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+
+.ch{display:inline-flex;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:10px;font-weight:700;letter-spacing:.08em;padding:2px 6px;border-radius:2px;white-space:nowrap}
+.ch-ga{color:var(--slate);background:var(--slate-wash)}
+.ch-bb{color:var(--patina);background:var(--patina-wash)}
+.ch-off{color:var(--muted);background:var(--chip);text-decoration:line-through;text-decoration-thickness:1px}
+
+.tw{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th{text-align:left;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);padding:8px 13px;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:8px 13px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tr.gh td{
+  background:var(--band);padding:6px 13px;
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-2);border-bottom:1px solid var(--rule-soft);
+}
+td.k{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:12px;font-weight:500;white-space:nowrap;width:1%;color:var(--patina)}
+td.k.plain{color:var(--ink)}
+td.d{font-size:13px;color:var(--ink-2)}
+td.ch-cell{width:1%;white-space:nowrap;text-align:right}
+.var{color:var(--muted);font-weight:400}
+.exp{display:block;margin-top:3px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:10.5px;color:var(--muted);white-space:normal;font-weight:400;line-height:1.5}
+.exp b{color:var(--ink-2);font-weight:700}
+.warn{color:var(--pending)}
+.alarm{color:var(--alarm);font-weight:600}
+
+.notes{border-top:1px solid var(--rule);padding-top:14px;display:flex;flex-direction:column;gap:7px}
+.notes h2{margin:0 0 2px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.note{display:grid;grid-template-columns:1.6em 1fr;gap:8px;font-size:12.5px;color:var(--ink-2);max-width:86ch}
+.note i{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-style:normal;
+  font-size:10.5px;font-weight:700;color:var(--patina);padding-top:2px}
+.note.hot i{color:var(--alarm)}
+code{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  font-size:.87em;background:var(--chip);padding:1px 4px;border-radius:2px}
+.foot{margin-top:4px;font-size:11px;color:var(--muted);
+  font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+
+@media (max-width:640px){h1{font-size:26px}.wrap{padding:26px 14px 50px;gap:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <h1>ForgeFortune 애널리틱스 키</h1>
+    <p class="lede">게임이 발신하는 <strong>이벤트</strong>와 <strong>커스텀 파라미터</strong> 전수. 발신 경로는 <code>AnalyticsService</code> 5개 파일뿐이다.</p>
+    <div class="strip">
+      <div class="stat"><b>19</b><span>이벤트</span></div>
+      <div class="stat"><b>5</b><span>GA·BB 양쪽</span></div>
+      <div class="stat"><b>14</b><span>BB 전용</span></div>
+      <div class="stat warn"><b>227</b><span>파라미터 · 이벤트당 최대</span></div>
+    </div>
+  </header>
+
+  <!-- 이벤트 -->
+  <section>
+    <div class="sh"><h2>이벤트</h2><span class="n">19</span></div>
+    <p class="legend"><span><span class="ch ch-ga">GA</span> <span class="ch ch-bb">BB</span> 양쪽 발신 — 파라미터 없이 이름 문자열만</span><span><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span> BB 전용 — 커스텀 파라미터 동반</span></p>
+    <div class="tw"><table>
+      <thead><tr><th>키</th><th>설명</th><th>채널</th></tr></thead>
+      <tbody>
+
+        <tr class="gh"><td colspan="3">온보딩 · 4</td></tr>
+
+        <tr>
+          <td class="k plain">Onboarding_main_step_<span class="var">NNN</span>_<span class="var">A</span></td>
+          <td class="d">메인 온보딩 스텝의 시작과 완료.
+            <span class="exp"><b>NNN</b> — 스텝 ID. 3자리 제로패딩</span>
+            <span class="exp"><b>A</b> — <code>Start</code> 스텝 진입 · <code>Complete</code> 스텝 완료</span>
+          </td><td class="ch-cell"><span class="ch ch-ga">GA</span> <span class="ch ch-bb">BB</span></td>
+        </tr>
+
+        <tr>
+          <td class="k plain">Onboarding_sub_<span class="var">KEY</span>_step_<span class="var">NNN</span>_<span class="var">A</span></td>
+          <td class="d">서브 온보딩 트랙의 스텝 시작과 완료.
+            <span class="exp"><b>KEY</b> — 서브 트랙 식별 문자열. 트랙마다 독립된 스텝 번호를 갖는다</span>
+            <span class="exp"><b>NNN</b> — 스텝 ID. 3자리 제로패딩</span>
+            <span class="exp"><b>A</b> — <code>Start</code> 스텝 진입 · <code>Complete</code> 스텝 완료</span>
+          </td><td class="ch-cell"><span class="ch ch-ga">GA</span> <span class="ch ch-bb">BB</span></td>
+        </tr>
+
+        <tr>
+          <td class="k">onboarding_main_step_<span class="var">NNN</span>_completed</td>
+          <td class="d">메인 스텝 완료 시점의 진행도 세트.
+            <span class="exp"><b>NNN</b> — 스텝 ID. 3자리 제로패딩</span>
+          </td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td>
+        </tr>
+
+        <tr>
+          <td class="k">onboarding_main_step_<span class="var">NNN</span>_record</td>
+          <td class="d">메인 스텝 완료 시점의 소요시간 세트.
+            <span class="exp"><b>NNN</b> — 스텝 ID. 3자리 제로패딩</span>
+          </td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td>
+        </tr>
+
+        <tr class="gh"><td colspan="3">광산 해금 비콘 · 1</td></tr>
+
+        <tr>
+          <td class="k plain">MineUnlockBeacon_Complete_<span class="var">BEACON</span></td>
+          <td class="d">광산 계열 해금 비콘의 결제 완료.
+            <span class="exp"><b>BEACON</b> — 광산 3종(<code>Bronze</code> · <code>Silver</code> · <code>Gold</code>) × 32종 = 96종. 아래 <code>{M}</code>에 광산명이 들어간다</span>
+            <span class="exp">· <code>{M}Mine</code> · <code>{M}Mine2</code> … <code>{M}Mine10</code> — 방 10종<br>
+              · <code>{M}Mine2Exit</code> … <code>{M}Mine10Exit</code> — 출입구 9종<br>
+              · <code>{M}MineLift</code> · <code>{M}Mine2Lift</code> … <code>{M}Mine10Lift</code> — 리프트 10종<br>
+              · <code>{M}MineLiftUpgrade</code> · <code>{M}Mine2LiftUpgrade</code> — 리프트 강화 2종<br>
+              · <code>{M}ImmortalRock</code> — 1종</span>
+          </td><td class="ch-cell"><span class="ch ch-ga">GA</span> <span class="ch ch-bb">BB</span></td>
+        </tr>
+
+        <tr class="gh"><td colspan="3">광산 방 진행도 · 1</td></tr>
+
+        <tr>
+          <td class="k plain">MineRoomClear_mine_type_<span class="var">M</span>_room_<span class="var">N</span>_<span class="var">S</span></td>
+          <td class="d">광산 방의 암석 파괴 진행도 도달.
+            <span class="exp"><b>M</b> — <code>Bronze</code> · <code>Silver</code> · <code>Gold</code>. 대문자</span>
+            <span class="exp"><b>N</b> — 방 번호 <code>1</code>~<code>10</code>. 제로패딩 없음</span>
+            <span class="exp"><b>S</b> — <code>Cleared</code> 방의 암석 전부 파괴 · <code>Half Cleared</code> 잔여 50% 선 통과</span>
+          </td><td class="ch-cell"><span class="ch ch-ga">GA</span> <span class="ch ch-bb">BB</span></td>
+        </tr>
+
+        <tr class="gh"><td colspan="3">업그레이드 · 1</td></tr>
+
+        <tr>
+          <td class="k plain">Upgrade_<span class="var">TARGET</span>_<span class="var">UNIT</span>_<span class="var">V</span>_<span class="var">C</span></td>
+          <td class="d">업그레이드 레벨·단계 도달.
+            <span class="exp"><b>C</b> — 대상 종류. <code>player</code> · <code>worker</code> · <code>weapon</code> · <code>furniture</code></span>
+            <span class="exp"><b>TARGET</b> · <b>UNIT</b> — C에 따라 값 집합이 달라진다<br>
+              · <code>player</code> → <code>move_speed</code> · <code>digging_power</code> · <code>digging_speed</code> · <code>backpack_capacity</code> · <code>hand_capacity</code> · <code>pickup_radius</code> + <code>level</code><br>
+              · <code>worker</code> → <code>worker_sword</code> · <code>worker_axe</code> · <code>worker_hammer</code> · <code>worker_cashier</code> · <code>worker_ore_support_01~03</code> · <code>worker_display_01~02</code> · <code>worker_repairer_01~03</code> + <code>level</code><br>
+              · <code>weapon</code> → <code>weapon_1</code> 검 · <code>weapon_2</code> 도끼 · <code>weapon_3</code> 망치 + <code>step</code><br>
+              · <code>furniture</code> → <code>display_stand_capacity</code> · <code>training_dummy_health</code> + <code>level</code></span>
+            <span class="exp"><b>V</b> — 도달한 레벨 또는 단계 값. <code>player</code>는 3의 배수 레벨만 발신된다</span>
+            <span class="exp"><b>예</b> — <code>Upgrade_move_speed_level_3_player</code> · <code>Upgrade_weapon_1_step_4_weapon</code></span>
+          </td><td class="ch-cell"><span class="ch ch-ga">GA</span> <span class="ch ch-bb">BB</span></td>
+        </tr>
+
+        <tr class="gh"><td colspan="3">광산 해금 스냅샷 · 8 · 전부 진행도 세트</td></tr>
+
+        <tr><td class="k">silver_mine_unlocked</td><td class="d">은광산 입구 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">gold_mine_unlocked</td><td class="d">금광산 입구 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">bronze_mine_room_unlocked</td><td class="d">동광산 방 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">silver_mine_room_unlocked</td><td class="d">은광산 방 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">bronze_mine_exit_unlocked</td><td class="d">동광산 출입구 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">silver_mine_exit_unlocked</td><td class="d">은광산 출입구 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">bronze_mine_cart_unlocked</td><td class="d">동광산 광차 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">silver_mine_cart_unlocked</td><td class="d">은광산 광차 해금 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr class="gh"><td colspan="3">특수 손님 · 4 · 전부 특수손님 세트</td></tr>
+
+        <tr><td class="k">special_customer_spawned</td><td class="d">특수 손님 등장 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">special_customer_deal_completed</td><td class="d">요구 수량을 채워 거래가 성사된 시점</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">special_customer_timeout_fully_completed</td><td class="d">제한 시간 만료 — 요구량 충족</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+
+        <tr><td class="k">special_customer_timeout_partially_completed</td><td class="d">제한 시간 만료 — 요구량 미달</td><td class="ch-cell"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <!-- 커스텀 파라미터 -->
+  <section>
+    <div class="sh">
+      <h2>커스텀 파라미터</h2><span class="n">고정 83 · 조건부 포함 최대 227</span>
+    </div>
+    <p class="legend"><span class="ch ch-off">GA</span> <span class="ch ch-bb">BB</span> 전부 BB 전용이다. GA는 이벤트 이름만 받으므로 <strong>파라미터를 하나도 볼 수 없다.</strong></p>
+    <div class="tw"><table>
+      <thead><tr><th>키</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr class="gh"><td colspan="2">공통 · 전 BB 이벤트 자동 부착 · 3</td></tr>
+        <tr><td class="k plain">ab_status</td><td class="d">AB 테스트 참여 여부 — <code>on</code>/<code>off</code> (string)</td></tr>
+        <tr><td class="k plain">ab_config</td><td class="d">AB 테스트 설정 문자열 (string)</td></tr>
+        <tr><td class="k plain">testGroup</td><td class="d">리모트컨피그 <code>cfg_testing</code>의 테스트 그룹 (string). 값이 있을 때만 실린다</td></tr>
+
+        <tr class="gh"><td colspan="2">진행도 세트 · 기본 · 6</td></tr>
+        <tr><td class="k plain">gold</td><td class="d">보유 골드</td></tr>
+        <tr><td class="k plain">special_ore</td><td class="d">보유 특수 광석</td></tr>
+        <tr><td class="k plain">exp</td><td class="d">현재 경험치</td></tr>
+        <tr><td class="k plain">level</td><td class="d">현재 플레이어 레벨</td></tr>
+        <tr><td class="k plain">since_lifetime_seconds</td><td class="d">누적 인게임 플레이 시간(초). 벽시계 경과가 아니라 실제 플레이 시간이며 일자 구분이 없다</td></tr>
+        <tr><td class="k plain">session_index</td><td class="d">인게임 진입 회차</td></tr>
+
+        <tr class="gh"><td colspan="2">업그레이드 · 21</td></tr>
+        <tr><td class="k plain">player_<span class="var">U</span>_level</td><td class="d">플레이어 업그레이드 레벨<span class="exp"><b>U</b> = <code>move_speed</code> · <code>digging_power</code> · <code>digging_speed</code> · <code>backpack_capacity</code> · <code>hand_capacity</code> · <code>pickup_radius</code> — 6키</span></td></tr>
+        <tr><td class="k plain">worker_worker_<span class="var">W</span>_level</td><td class="d">직원별 업그레이드 레벨. <code>worker_</code>가 두 번 붙는다 — 카테고리와 <code>PlaceType</code> 이름이 겹친 결과다<span class="exp"><b>W</b> = <code>sword</code> · <code>axe</code> · <code>hammer</code> · <code>cashier</code> · <code>ore_support_01~03</code> · <code>display_01~02</code> · <code>repairer_01~03</code> — 12키</span></td></tr>
+        <tr><td class="k plain">equipment_<span class="var">P</span>_step</td><td class="d">무기 강화 단계<span class="exp"><b>P</b> = <code>sword</code> · <code>axe</code> · <code>hammer</code> — 3키</span></td></tr>
+
+        <tr class="gh"><td colspan="2">가구 · 최대 14 · 해금분만</td></tr>
+        <tr><td class="k plain">furniture_display_stand_<span class="var">P</span>_<span class="var">NN</span>_display_stand_capacity_level</td><td class="d">진열대 수용량 레벨<span class="exp"><b>P</b> = <code>sword</code>|<code>axe</code>|<code>hammer</code> · <b>NN</b> = <code>01</code>|<code>02</code> — 6키</span></td></tr>
+        <tr><td class="k plain">furniture_training_dummy_<span class="var">NN</span>_training_dummy_health_level</td><td class="d">허수아비 체력 레벨<span class="exp"><b>NN</b> = <code>01</code> … <code>08</code> — 8키</span></td></tr>
+
+        <tr class="gh"><td colspan="2">광산 · 12</td></tr>
+        <tr><td class="k plain">mine_<span class="var">M</span>_unlocked_room</td><td class="d">해금한 최고 방 번호<span class="exp"><b>M</b> = <code>bronze</code> · <code>silver</code> · <code>gold</code> — 소문자. 이하 광산 키 동일</span></td></tr>
+        <tr><td class="k plain">mine_<span class="var">M</span>_enter_count</td><td class="d">광산 입장 횟수</td></tr>
+        <tr><td class="k plain">mine_<span class="var">M</span>_exit_count</td><td class="d">광산 퇴장 횟수</td></tr>
+        <tr><td class="k plain">mine_<span class="var">M</span>_lifetime_in_mine_seconds</td><td class="d">광산 누적 체류 시간(초)</td></tr>
+
+        <tr class="gh"><td colspan="2">재화 흐름 · 4</td></tr>
+        <tr><td class="k plain">gold_earned_total</td><td class="d">누적 획득 골드</td></tr>
+        <tr><td class="k plain">gold_spent_total</td><td class="d">누적 소비 골드</td></tr>
+        <tr><td class="k plain">special_ore_earned_total</td><td class="d">누적 획득 특수 광석</td></tr>
+        <tr><td class="k plain">special_ore_spent_total</td><td class="d">누적 소비 특수 광석</td></tr>
+
+        <tr class="gh"><td colspan="2">특수 손님 누적 · 5</td></tr>
+        <tr><td class="k plain">special_customer_spawned_count</td><td class="d">특수 손님 등장 누적 횟수</td></tr>
+        <tr><td class="k plain">special_customer_manual_fully_completed_count</td><td class="d">직접 납품으로 요구량을 채운 횟수</td></tr>
+        <tr><td class="k plain">special_customer_get_ads_fully_completed_count</td><td class="d">광고 시청으로 요구량을 채운 횟수</td></tr>
+        <tr><td class="k plain">special_customer_timeout_fully_completed_count</td><td class="d">제한 시간 만료 시점에 요구량이 충족돼 있던 횟수</td></tr>
+        <tr><td class="k plain">special_customer_partially_completed_count</td><td class="d">요구량 미달로 종료된 횟수</td></tr>
+
+        <tr class="gh"><td colspan="2">방치 재화 · 광석더미 · 5</td></tr>
+        <tr><td class="k plain">pending_beacon_gold_cash_counter</td><td class="d">계산대에 방치된 미수령 골드. <span class="warn">마지막 저장 flush 시점 값이라 이벤트 순간의 실제 값과 다를 수 있다</span></td></tr>
+        <tr><td class="k plain">pending_beacon_gold_training_center</td><td class="d">훈련소에 방치된 미수령 골드. <span class="warn">마지막 저장 flush 시점 값</span></td></tr>
+        <tr><td class="k plain">ore_stand_<span class="var">M</span>_count</td><td class="d">광석더미에 쌓인 광물 수. <span class="warn">마지막 저장 flush 시점 값</span><span class="exp"><b>M</b> = <code>bronze</code>(Copper) · <code>silver</code> · <code>gold</code> — 3키</span></td></tr>
+
+        <tr class="gh"><td colspan="2">가이드 퀘스트 · 5</td></tr>
+        <tr><td class="k plain">guide_quest_focus_step</td><td class="d">현재 포커스 퀘스트 스텝</td></tr>
+        <tr><td class="k plain">guide_quest_focus_state</td><td class="d">해당 스텝 상태 (enum 정수)</td></tr>
+        <tr><td class="k plain">guide_quest_focus_progress_value</td><td class="d">해당 스텝 진행값</td></tr>
+        <tr><td class="k plain">guide_quest_current</td><td class="d">현재 달성치</td></tr>
+        <tr><td class="k plain">guide_quest_target</td><td class="d">목표치</td></tr>
+
+        <tr class="gh"><td colspan="2">채굴 장비 · 10</td></tr>
+        <tr><td class="k plain">mine_tool_equipped_id</td><td class="d">현재 장착 장비 ID<span class="exp"><code>1</code> 곡괭이 · <code>2</code> 해머 · <code>3</code> 드릴</span></td></tr>
+        <tr><td class="k plain">mine_tool_<span class="var">T</span>_unlocked</td><td class="d">장비별 해금 여부 0/1. 곡괭이는 초기 해금이라 항상 1<span class="exp"><b>T</b> = <code>pickaxe</code> · <code>hammer</code> · <code>drill</code> — 3키. 이하 장비 키 동일</span></td></tr>
+        <tr><td class="k plain">mine_tool_<span class="var">T</span>_digging_power_level</td><td class="d">장비별 채굴력 레벨. 장착 여부와 무관하게 3종 전부 실린다. <span class="warn">미해금 장비도 기본값 1로 실리므로 <code>_unlocked</code>와 함께 읽어야 한다</span></td></tr>
+        <tr><td class="k plain">mine_tool_<span class="var">T</span>_digging_speed_level</td><td class="d">장비별 채굴속도 레벨</td></tr>
+
+        <tr class="gh"><td colspan="2">다이너마이트 · 5</td></tr>
+        <tr><td class="k plain">dynamite_explode_range_level</td><td class="d">폭발 반경 강화 레벨</td></tr>
+        <tr><td class="k plain">dynamite_explode_damage_level</td><td class="d">폭발 대미지 강화 레벨</td></tr>
+        <tr><td class="k plain">dynamite_stock_capacity_level</td><td class="d">최대 재고 강화 레벨</td></tr>
+        <tr><td class="k plain">dynamite_production_interval_level</td><td class="d">생산 주기 강화 레벨</td></tr>
+        <tr><td class="k plain">dynamite_exploded_count</td><td class="d">다이너마이트 폭발 누적 횟수</td></tr>
+
+        <tr class="gh"><td colspan="2">무기별 제작 · 3</td></tr>
+        <tr><td class="k plain">craft_<span class="var">P</span>_complete_count</td><td class="d">무기별 제작 완료 누적 수<span class="exp"><b>P</b> = <code>sword</code> · <code>axe</code> · <code>hammer</code> — 3키</span></td></tr>
+
+        <tr class="gh"><td colspan="2">필드 보상 RV · 최대 36 · 값이 0인 조합은 실리지 않음</td></tr>
+        <tr><td class="k plain">field_reward_offer_<span class="var">ID</span>_spawned_count</td><td class="d">오퍼가 필드에 스폰된 횟수<span class="exp"><b>ID</b> = <code>1</code> 마을복귀 · <code>3</code> 가방가득 · <code>4</code> 암석파괴 · <code>5</code> 비콘골드부족 · <code>6</code> 첫특수손님 · <code>7</code> 광석획득 — 이하 RV 키 동일. <code>2</code>는 결번</span></td></tr>
+        <tr><td class="k plain">field_reward_offer_<span class="var">ID</span>_popup_opened_count</td><td class="d">팝업을 연 횟수. <code>spawned</code> 대비 비율이 오퍼별 관심도다</td></tr>
+        <tr><td class="k plain">field_reward_offer_<span class="var">ID</span>_popup_closed_count</td><td class="d">팝업을 닫은 횟수</td></tr>
+        <tr><td class="k plain">field_reward_offer_<span class="var">ID</span>_offer_try_count</td><td class="d">수령 버튼을 누른 횟수</td></tr>
+        <tr><td class="k plain">field_reward_offer_<span class="var">ID</span>_offer_completed_count</td><td class="d">보상 수령까지 완료한 횟수. <code>offer_try − offer_completed</code>가 실패 수다</td></tr>
+        <tr><td class="k plain">field_reward_offer_<span class="var">ID</span>_expired_count</td><td class="d">수령 없이 만료된 횟수</td></tr>
+
+        <tr class="gh"><td colspan="2">암석 파괴 · 7 + 조건부 최대 91</td></tr>
+        <tr><td class="k plain">destroyed_rock_count</td><td class="d">파괴한 암석 총합</td></tr>
+        <tr><td class="k plain"><span class="var">C</span>_destroyed_rock_count</td><td class="d">파괴 출처별 총합. 6키 합이 <code>destroyed_rock_count</code>와 일치해야 한다<span class="exp"><b>C</b> = <code>mine_tool_pickaxe</code> · <code>mine_tool_hammer</code> · <code>mine_tool_drill</code> · <code>dynamite</code> · <code>bomb_barrel</code> · <code>minecart</code> — 6키</span></td></tr>
+        <tr><td class="k plain">rock_<span class="var">ID</span>_destroyed_count</td><td class="d">암석 ID별 파괴 수. 파괴 이력이 있는 ID만 실린다<span class="exp"><b>ID</b> = <code>101</code> 특수 · <code>11N</code> 동 · <code>12N</code> 은 · <code>13N</code> 금 (끝자리 1·2 일반 / 3·4 광물) — 최대 13키</span></td></tr>
+        <tr><td class="k plain">rock_<span class="var">ID</span>_destroyed_by_<span class="var">C</span>_count</td><td class="d"><span class="alarm">암석 ID × 출처 조합마다 개별 발신된다.</span> 이력이 있는 조합만 실리지만 후반 유저는 수십 개가 붙는다<span class="exp">최대 13 × 6 = 78키 — 파라미터 개수 폭증의 주원인</span></td></tr>
+
+        <tr class="gh"><td colspan="2">소요시간 세트 · 최대 5 · <span style="text-transform:none;letter-spacing:0">onboarding_main_step_NNN_record</span></td></tr>
+        <tr><td class="k plain">record_time</td><td class="d">직전 analytics 스텝 완료 → 이번 완료까지 경과(초)</td></tr>
+        <tr><td class="k plain">town_record_time</td><td class="d"><code>record_time</code> 중 마을 체류분 (광산 체류 제외)</td></tr>
+        <tr><td class="k plain">mine_<span class="var">M</span>_record_time</td><td class="d">구간 내 광산별 체류 시간(초). 체류 기록이 있는 광산만 실린다<span class="exp"><b>M</b> = <code>bronze</code> · <code>silver</code> · <code>gold</code> — 3키</span></td></tr>
+
+        <tr class="gh"><td colspan="2">특수손님 세트 · 최대 5 · <span style="text-transform:none;letter-spacing:0">special_customer_*</span></td></tr>
+        <tr><td class="k plain">ordered_weapon_type</td><td class="d">주문 무기 (string)<span class="exp"><code>sword</code> · <code>axe</code> · <code>hammer</code> — 4종 이벤트 전부에 실린다</span></td></tr>
+        <tr><td class="k plain">completion_type</td><td class="d">완료 경로 (string)<span class="exp"><code>manual</code> 직접 납품 · <code>get_ads</code> 광고 시청 · <code>timeout</code> 시간 만료 — <code>spawned</code>를 제외한 3종에만</span></td></tr>
+        <tr><td class="k plain">required_quantity</td><td class="d">요구 수량. 4종 전부</td></tr>
+        <tr><td class="k plain">supplied_quantity</td><td class="d">실제 납품 수량. <code>spawned</code> 제외 3종</td></tr>
+        <tr><td class="k plain">acquired_gold</td><td class="d">거래로 획득한 골드. <code>spawned</code> 제외 3종</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+</div>
+
+</body>
+</html>
